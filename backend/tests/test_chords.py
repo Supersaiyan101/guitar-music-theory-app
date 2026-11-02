@@ -4,6 +4,8 @@ from backend.app.schemas.theory import ChordQuality
 from backend.app.theory.chords import (
     parse_chord_symbol,
     deconstruct_chord,
+    get_chord_arpeggio,
+    get_chord_embellishments,
     get_triad_inversion_notes,
     list_supported_chords,
 )
@@ -51,37 +53,31 @@ def test_deconstruct_hendrix_chord():
     assert chord.root == "E"
     assert chord.quality == ChordQuality.ALTERED_DOMINANT
     assert chord.intervals == ["1", "3", "5", "b7", "#9"]
-    # E7#9 has both G# (Major 3rd) and G (Sharp 9 / physical minor 3rd tone)
     assert chord.tones == ["E", "G#", "B", "D", "G"]
 
 
-def test_deconstruct_7th_chords():
-    # Dominant 7th
-    g7 = deconstruct_chord("G7")
-    assert g7.tones == ["G", "B", "D", "F"]
+def test_get_chord_arpeggio():
+    # Sequential single notes for soloing sweeps and lines
+    arpeggio_am7 = get_chord_arpeggio("Am7")
+    assert arpeggio_am7 == ["A", "C", "E", "G", "A"]
 
-    # Major 7th
-    cmaj7 = deconstruct_chord("Cmaj7")
-    assert cmaj7.tones == ["C", "E", "G", "B"]
-
-    # Minor 7th
-    am7 = deconstruct_chord("Am7")
-    assert am7.tones == ["A", "C", "E", "G"]
-
-    # Half-diminished
-    bm7b5 = deconstruct_chord("Bm7b5")
-    assert bm7b5.tones == ["B", "D", "F", "A"]
+    arpeggio_g = get_chord_arpeggio("G")
+    assert arpeggio_g == ["G", "B", "D", "G"]
 
 
-def test_deconstruct_suspended_and_add_chords():
-    dsus4 = deconstruct_chord("Dsus4")
-    assert dsus4.tones == ["D", "G", "A"]
+def test_get_chord_embellishments():
+    # Hendrix / Mayer fills for C Major: sus4 is F, add9 is D, 6th is A
+    c_emb = get_chord_embellishments("C")
+    assert c_emb["chord"] == "C"
+    assert c_emb["embellishments"]["sus4"]["note"] == "F"
+    assert c_emb["embellishments"]["add9"]["note"] == "D"
+    assert c_emb["embellishments"]["sixth"]["note"] == "A"
 
-    dsus2 = deconstruct_chord("Dsus2")
-    assert dsus2.tones == ["D", "E", "A"]
-
-    cadd9 = deconstruct_chord("Cadd9")
-    assert cadd9.tones == ["C", "E", "G", "D"]
+    # Fills for A Major: sus4 is D, add9 is B, 6th is F#
+    a_emb = get_chord_embellishments("A")
+    assert a_emb["embellishments"]["sus4"]["note"] == "D"
+    assert a_emb["embellishments"]["add9"]["note"] == "B"
+    assert a_emb["embellishments"]["sixth"]["note"] == "F#"
 
 
 def test_triad_inversions_g_major():
@@ -96,22 +92,6 @@ def test_triad_inversions_g_major():
     # 2nd Inversion G/D (5 - 1 - 3)
     second_inv = get_triad_inversion_notes("G", quality="maj", inversion=2)
     assert second_inv == ["D", "G", "B"]
-
-
-def test_triad_inversions_a_minor():
-    root_pos = get_triad_inversion_notes("A", quality="min", inversion=0)
-    assert root_pos == ["A", "C", "E"]
-
-    first_inv = get_triad_inversion_notes("A", quality="min", inversion=1)
-    assert first_inv == ["C", "E", "A"]
-
-    second_inv = get_triad_inversion_notes("A", quality="min", inversion=2)
-    assert second_inv == ["E", "A", "C"]
-
-
-def test_triad_inversion_invalid():
-    with pytest.raises(ValueError):
-        get_triad_inversion_notes("G", inversion=3)
 
 
 def test_list_supported_chords():

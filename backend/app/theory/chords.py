@@ -1,9 +1,10 @@
 """Chord Formula and Quality Parser for Guitar Theory Kingdom.
 
 Deconstructs any chord symbol (triads, 7ths, Hendrix chords, altered dominants,
-slash chords) into root, intervals, and constituent spelled chord tones for fretboard navigation.
+slash chords) into root, intervals, and constituent spelled chord tones.
+Supports triad inversions, sequential arpeggios, and Hendrix/Mayer chord embellishments.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from backend.app.schemas.theory import ChordDefinition, ChordQuality
 from backend.app.theory.pitch import (
     NotationMode,
@@ -284,7 +285,6 @@ def parse_chord_symbol(symbol: str) -> Tuple[str, str, Optional[str]]:
         parts = clean.split("/", 1)
         clean = parts[0].strip()
         bass = parts[1].strip().capitalize()
-        # Validate bass note
         _ = note_to_pitch_class(bass)
     
     # 2. Extract root note
@@ -295,13 +295,11 @@ def parse_chord_symbol(symbol: str) -> Tuple[str, str, Optional[str]]:
         root = clean[:1].capitalize()
         suffix = clean[1:]
         
-    # Validate root note
     _ = note_to_pitch_class(root)
     
     # 3. Normalize suffix
     norm_suffix = SUFFIX_ALIASES.get(suffix, suffix.lower())
     if norm_suffix not in CHORD_TEMPLATES:
-        # Try direct match
         if suffix in CHORD_TEMPLATES:
             norm_suffix = suffix
         else:
@@ -315,21 +313,10 @@ def deconstruct_chord(
     symbol: str,
     mode: NotationMode = NotationMode.PRACTICAL
 ) -> ChordDefinition:
-    """Deconstructs any chord into its constituent tones, intervals, quality, and bass.
-    
-    Example:
-        deconstruct_chord("G") ->
-            root: "G", quality: ChordQuality.MAJOR,
-            intervals: ["1", "3", "5"], tones: ["G", "B", "D"]
-            
-        deconstruct_chord("E7#9") ->
-            root: "E", quality: ChordQuality.ALTERED_DOMINANT,
-            intervals: ["1", "3", "5", "b7", "#9"], tones: ["E", "G#", "B", "D", "G"]
-    """
+    """Deconstructs any chord into its constituent tones, intervals, quality, and bass."""
     root, suffix, bass = parse_chord_symbol(symbol)
     tmpl = CHORD_TEMPLATES[suffix]
     
-    # Calculate each constituent note from the intervals
     tones = [get_note_at_interval(root, interval, mode=mode) for interval in tmpl.intervals]
     
     return ChordDefinition(
@@ -340,6 +327,73 @@ def deconstruct_chord(
         tones=tones,
         bass=bass,
     )
+
+
+def get_chord_arpeggio(
+    symbol: str,
+    include_octave: bool = True,
+    mode: NotationMode = NotationMode.PRACTICAL
+) -> List[str]:
+    """Generates sequential arpeggio note lines for soloing over chord changes.
+    
+    Example:
+        get_chord_arpeggio("Am7") -> ['A', 'C', 'E', 'G', 'A']
+        get_chord_arpeggio("G")   -> ['G', 'B', 'D', 'G']
+    """
+    chord = deconstruct_chord(symbol, mode=mode)
+    notes = list(chord.tones)
+    if include_octave and chord.root not in notes[-1:]:
+        notes.append(chord.root)
+    return notes
+
+
+def get_chord_embellishments(
+    symbol: str,
+    mode: NotationMode = NotationMode.PRACTICAL
+) -> Dict[str, Any]:
+    """Calculates the classic Hendrix / Mayer chord embellishment target notes
+    (the hammer-on / pull-off color tones right inside the chord grip).
+    
+    Identifies:
+        - Sus4 embellishment (hammering from 3rd to 4th)
+        - Add9 / Sus2 embellishment (hammering from Root to 2nd/9th)
+        - 6th embellishment (hammering from 5th to 6th)
+    
+    Example:
+        get_chord_embellishments("C") ->
+            sus4: F (hammer on from E)
+            add9: D (hammer on from C)
+            six:  A (hammer on from G)
+    """
+    chord = deconstruct_chord(symbol, mode=mode)
+    root = chord.root
+    
+    # Calculate embellishment notes
+    sus4_note = get_note_at_interval(root, "4", mode=mode)
+    add9_note = get_note_at_interval(root, "2", mode=mode)
+    six_note = get_note_at_interval(root, "6", mode=mode)
+    
+    return {
+        "chord": chord.symbol,
+        "root": root,
+        "embellishments": {
+            "sus4": {
+                "interval": "4",
+                "note": sus4_note,
+                "action": "Hammer-on from 3rd to 4th (Classic Hendrix Little Wing suspended fill)",
+            },
+            "add9": {
+                "interval": "9",
+                "note": add9_note,
+                "action": "Hammer-on from Root to 9th (Dreamy acoustic/ballad color)",
+            },
+            "sixth": {
+                "interval": "6",
+                "note": six_note,
+                "action": "Hammer-on from 5th to 6th (Curtis Mayfield / R&B soul fill)",
+            },
+        }
+    }
 
 
 def get_triad_inversion_notes(
@@ -363,10 +417,8 @@ def get_triad_inversion_notes(
     if inversion == 0:
         return triad_tones
     elif inversion == 1:
-        # [3rd, 5th, Root]
         return [triad_tones[1], triad_tones[2], triad_tones[0]]
     elif inversion == 2:
-        # [5th, Root, 3rd]
         return [triad_tones[2], triad_tones[0], triad_tones[1]]
     else:
         raise ValueError("Triad inversions can only be 0 (Root), 1 (1st), or 2 (2nd)")
