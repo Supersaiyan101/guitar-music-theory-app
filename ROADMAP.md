@@ -27,9 +27,9 @@
 
 ### 🛠️ Phase 0: Workspace Scaffolding & Seed Data
 
-- [ ] **`TASK-0.1`**: Repository scaffolding (`backend/`, `frontend/`, `data/`), Python virtual environment config, `requirements.txt` with locked versions, and root `.gitignore`.
+- [x] **`TASK-0.1`**: Repository scaffolding (`backend/`, `frontend/`, `data/`), Python virtual environment config, `requirements.txt` with locked versions, and root `.gitignore`.
   * *Deliverable:* Project structure initialized and verified with clean python/node checks.
-- [ ] **`TASK-0.2`**: Theory Data Schemas (`Pydantic` models for Scales, Chords, Progressions, and CAGED Boxes).
+- [x] **`TASK-0.2`**: Theory Data Schemas (`Pydantic` models for Scales, Chords, Progressions, and CAGED Boxes).
   * *Deliverable:* `backend/app/schemas/theory.py` with serializable JSON models.
 - [ ] **`TASK-0.3`**: Wikipedia & OpenMusicTheory Seed Harvester for core scales (Pentatonics, Blues, 7 Modes).
   * *Deliverable:* `data/processed/theory_seed.json` with 25+ verified musical structures.
@@ -40,7 +40,7 @@
 
 ### 🧠 Phase 1: Deterministic Music Theory Engine (Python)
 
-- [ ] **`TASK-1.1`**: Pitch Class Algebra & Enharmonic Resolution (Chroma $0-11$, circle of fifths, accidental spellings $\sharp$ vs $\flat$).
+- [x] **`TASK-1.1`**: Pitch Class Algebra & Enharmonic Resolution (Chroma $0-11$, circle of fifths, accidental spellings $\sharp$ vs $\flat$).
   * *Deliverable:* `backend/app/theory/pitch.py` + `backend/tests/test_pitch.py` (100% test pass).
 - [ ] **`TASK-1.2`**: Interval Engine (Semitone distance, compound intervals, inversion math).
   * *Deliverable:* `backend/app/theory/intervals.py` + `backend/tests/test_intervals.py`.
