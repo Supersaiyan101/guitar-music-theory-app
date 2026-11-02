@@ -21,7 +21,7 @@
 |---|---|---|---|
 | **`TASK-0.1`** | Monorepo Scaffolding & Virtualenv | 2026-11-02 | `backend/`, `data/`, `frontend/`, `.gitignore`, `backend/requirements.txt`, Python virtualenv `.venv` with `fastapi`, `pydantic`, `pytest` |
 | **`TASK-0.2`** | Core Theory Data Schemas | 2026-11-02 | `backend/app/schemas/theory.py` (`ScaleDefinition`, `ChordDefinition`, `FretCoordinate`, `CagedBoxDefinition`, `ProgressionSection`) |
-| **`TASK-1.1`** | Pitch Class Algebra & Enharmonic Resolution | 2026-11-02 | `backend/app/theory/pitch.py` with `NotationMode.PRACTICAL` (guitar frets: E#->F) & `ACADEMIC`, 11/11 `pytest` passing |
+| **`TASK-1.1`** | Pitch Class Algebra & Enharmonic Resolution | 2026-11-02 | `backend/app/theory/pitch.py` with `NotationMode.PRACTICAL` (E#->F), case-insensitivity ('c#'->'C#'), negative transpositions, Circle of Fifths helper, 15/15 `pytest` passing |
 | **`TASK-1.2`** | Interval Engine | 2026-11-02 | `backend/app/theory/intervals.py`, compound extensions (#9, 13), degree letter resolution, 18/18 `pytest` passing |
 | **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | `backend/app/theory/scales.py` (Full Major, Natural/Harmonic/Melodic Minor, Pentatonics, Blues, 7 Modes, Phrygian Dominant), 31/31 `pytest` passing |
 | **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, slash chords), 43/43 `pytest` passing |
