@@ -1,15 +1,18 @@
 """Interval Engine for Guitar Theory Kingdom.
 
 Handles calculation of interval degrees, semitone distances, compound intervals
-(9ths, 11ths, 13ths), and note transpositions by interval.
+(9ths, 11ths, 13ths), and note transpositions by interval with proper letter resolution.
 """
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 from backend.app.theory.pitch import (
+    DIATONIC_LETTERS,
+    LETTER_INDEX,
     NotationMode,
     note_to_pitch_class,
-    pitch_class_to_note,
+    parse_note,
     semitones_between,
     simplify_to_practical,
+    spell_note_with_letter,
     transpose_note,
 )
 
@@ -40,6 +43,17 @@ DEGREE_TO_SEMITONES: Dict[str, int] = {
     "#11": 18, # Lydian dominant tension
     "b13": 20,
     "13": 21,  # Funk / R&B extension
+}
+
+# Diatonic letter offset for each degree (0 to 6)
+DEGREE_TO_LETTER_OFFSET: Dict[str, int] = {
+    "1": 0, "R": 0, "unison": 0, "8": 0, "octave": 0,
+    "b2": 1, "m2": 1, "2": 1, "M2": 1, "#2": 1, "b9": 1, "9": 1, "#9": 1,
+    "b3": 2, "m3": 2, "3": 2, "M3": 2,
+    "4": 3, "P4": 3, "#4": 3, "11": 3, "#11": 3, "b11": 3,
+    "b5": 4, "d5": 4, "5": 4, "P5": 4, "#5": 4,
+    "b6": 5, "m6": 5, "6": 5, "M6": 5, "b13": 5, "13": 5,
+    "bb7": 6, "dim7": 6, "b7": 6, "m7": 6, "7": 6, "M7": 6,
 }
 
 # Canonical 12 chromatic semitones to guitar interval degree
@@ -134,17 +148,31 @@ def get_note_at_interval(
     interval_degree: str,
     mode: NotationMode = NotationMode.PRACTICAL
 ) -> str:
-    """Finds the note that sits at a given interval from root_note.
+    """Finds the note that sits at a given interval from root_note with proper diatonic spelling.
     
-    Example: root='A', interval='b3' -> 'C'
-             root='A', interval='3' -> 'C#'
+    Example: root='A', interval='b3' -> 'C' (3rd degree of A has letter C)
+             root='E', interval='b5' -> 'Bb' (5th degree of E has letter B, not A#!)
              root='F#', interval='7' (Major 7th) -> 'F' (in practical mode) or 'E#' (in academic)
     """
-    semitones = interval_to_semitones(interval_degree)
-    raw_note = transpose_note(root_note, semitones)
+    clean_deg = interval_degree.strip()
+    semitones = interval_to_semitones(clean_deg)
+    root_pc = note_to_pitch_class(root_note)
+    target_pc = (root_pc + semitones) % 12
+    
+    # Resolve target diatonic letter from degree number
+    root_letter, _ = parse_note(root_note)
+    start_letter_idx = LETTER_INDEX[root_letter]
+    letter_offset = DEGREE_TO_LETTER_OFFSET.get(clean_deg, None)
+    
+    if letter_offset is not None:
+        target_letter = DIATONIC_LETTERS[(start_letter_idx + letter_offset) % 7]
+        return spell_note_with_letter(target_pc, target_letter, mode=mode)
+    
+    # Fallback to practical pitch class
+    raw = transpose_note(root_note, semitones)
     if mode == NotationMode.PRACTICAL:
-        return simplify_to_practical(raw_note)
-    return raw_note
+        return simplify_to_practical(raw)
+    return raw
 
 
 def get_interval_name(interval_degree: str) -> str:
