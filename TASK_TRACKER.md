@@ -8,8 +8,9 @@
 
 | Status | Task ID | Name | Focus Area |
 |---|---|---|---|
-| 🔄 **IN PROGRESS** | **`TASK-1.4`** | **Chord Formula & Quality Parser** | Triads, 7ths, altered chords |
-| ⏭️ **NEXT UP** | **`TASK-1.5`** | 24-Fret Guitar Matrix & CAGED 5-Box Engine | Full fretboard coordinates & boxes |
+| 🔄 **IN PROGRESS** | **`TASK-1.5`** | **24-Fret Guitar Matrix & CAGED 5-Box Engine** | Full fretboard coordinates, boxes, and chord tone targeting |
+| ⏭️ **NEXT UP** | **`TASK-2.1`** | Next.js 14 Web App Scaffolding | Frontend app router & layout |
+| ⚪ **QUEUED** | **`TASK-2.2`** | Dynamic SVG Fretboard Component | Scalable vector guitar neck |
 
 ---
 
@@ -22,11 +23,12 @@
 | **`TASK-1.1`** | Pitch Class Algebra & Enharmonic Resolution | 2026-11-02 | `backend/app/theory/pitch.py` with `NotationMode.PRACTICAL` (guitar frets: E#->F) & `ACADEMIC`, 11/11 `pytest` passing |
 | **`TASK-1.2`** | Interval Engine | 2026-11-02 | `backend/app/theory/intervals.py`, compound extensions (#9, 13), degree letter resolution, 18/18 `pytest` passing |
 | **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | `backend/app/theory/scales.py` (Full Major, Natural/Harmonic/Melodic Minor, Pentatonics, Blues, 7 Modes, Phrygian Dominant), 31/31 `pytest` passing |
+| **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, slash chords), 43/43 `pytest` passing |
 
 ---
 
-## 🎯 Active Task Detail: `TASK-1.4`
-* **Target File:** `backend/app/theory/chords.py`
-* **Test File:** `backend/tests/test_chords.py`
+## 🎯 Active Task Detail: `TASK-1.5`
+* **Target File:** `backend/app/theory/fretboard.py`
+* **Test File:** `backend/tests/test_fretboard.py`
 * **Status:** Fine-Tuning Specification (Pending User Review)
 

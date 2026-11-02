@@ -46,7 +46,7 @@
   * *Deliverable:* `backend/app/theory/intervals.py` + `backend/tests/test_intervals.py`.
 - [x] **`TASK-1.3`**: Scale & Mode Generator (Major, Minor, Pentatonics, Blues, Modes, Phrygian Dominant).
   * *Deliverable:* `backend/app/theory/scales.py` + `backend/tests/test_scales.py`.
-- [ ] **`TASK-1.4`**: Chord Formula & Quality Parser (Triads, 7ths, altered dominants, slash chords).
+- [x] **`TASK-1.4`**: Chord Formula & Quality Parser (Triads, 7ths, altered dominants, slash chords).
   * *Deliverable:* `backend/app/theory/chords.py` + `backend/tests/test_chords.py`.
 - [ ] **`TASK-1.5`**: 24-Fret Guitar Matrix & CAGED 5-Box Position Engine (Standard & alternate tunings, 3NPS coordinates).
   * *Deliverable:* `backend/app/theory/fretboard.py` + `backend/tests/test_fretboard.py`.
