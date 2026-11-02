@@ -4,6 +4,9 @@ from backend.app.theory.pitch import NotationMode
 from backend.app.theory.intervals import (
     interval_to_semitones,
     semitones_to_interval,
+    invert_interval,
+    classify_diad,
+    get_double_stop_notes,
     get_interval_between,
     get_note_at_interval,
     get_interval_name,
@@ -43,6 +46,53 @@ def test_semitones_to_interval():
     assert semitones_to_interval(11) == "7"
     # Octave wraps
     assert semitones_to_interval(15) == "b3"
+
+
+def test_invert_interval_rule_of_nine():
+    # Minor 3rd inverts to Major 6th
+    assert invert_interval("b3") == "6"
+    # Major 3rd inverts to Minor 6th
+    assert invert_interval("3") == "b6"
+    # 4th inverts to 5th, 5th inverts to 4th
+    assert invert_interval("4") == "5"
+    assert invert_interval("5") == "4"
+    # Minor 7th inverts to Major 2nd
+    assert invert_interval("b7") == "2"
+    # Tritone symmetry
+    assert invert_interval("b5") == "b5"
+
+
+def test_classify_diad():
+    # 3rds (sweet harmony)
+    d3 = classify_diad("3")
+    assert d3["type"] == "3rd_harmony"
+    assert d3["adjacent_strings"] is True
+
+    # 6ths (Mayer/Hendrix sliding diads on skipped strings)
+    d6 = classify_diad("6")
+    assert d6["type"] == "6th_sliding"
+    assert d6["adjacent_strings"] is False
+
+    # 4ths (rock stabs)
+    d4 = classify_diad("4")
+    assert d4["type"] == "4th_stab"
+
+    # 5ths (power chord)
+    d5 = classify_diad("5")
+    assert d5["type"] == "5th_power"
+
+    # Octaves
+    doct = classify_diad("8")
+    assert doct["type"] == "octave"
+
+
+def test_get_double_stop_notes():
+    # A with minor 3rd -> (A, C)
+    assert get_double_stop_notes("A", "b3") == ("A", "C")
+    # A with major 6th -> (A, F#)
+    assert get_double_stop_notes("A", "6") == ("A", "F#")
+    # E with 5th -> (E, B)
+    assert get_double_stop_notes("E", "5") == ("E", "B")
 
 
 def test_get_interval_between():
