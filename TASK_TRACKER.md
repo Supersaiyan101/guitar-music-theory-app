@@ -12,9 +12,9 @@
 |---|---|---|---|
 | 🟢 **COMPLETE** | **`TASK-1.1`** | **Pitch Class Algebra & Voice Leading Math** | Note math, enharmonics, shortest voice-leading, circle of fifths |
 | 🟢 **COMPLETE** | **`TASK-1.2`** | **Interval Engine & Diads** | Rule of 9 inversions, double-stop diads (3rds, 6ths, 4ths, octaves) |
-| 🔄 **IN REVIEW** | **`TASK-1.3`** | **Scale & Mode Generator** | Adding Hybrid Pentatonic & Bebop scales |
+| 🟢 **COMPLETE** | **`TASK-1.3`** | **Scale & Mode Generator** | Hybrid Pentatonic Blues (B.B. King/SRV) & Dominant Bebop scales |
 | 🟢 **COMPLETE** | **`TASK-1.4`** | **Chord Formula & Inversion Parser** | Triad inversions, sequential arpeggios, Hendrix/Mayer embellishments |
-| ⚪ **QUEUED** | **`TASK-1.5`** | **Fretboard Matrix & Soloing Boxes** | Adding Diagonal Pentatonic runs, 3NPS, & B.B. King box |
+| 🔄 **IN REVIEW** | **`TASK-1.5`** | **Fretboard Matrix & Soloing Boxes** | Adding Diagonal Pentatonic runs, 3NPS, & B.B. King box |
 
 ---
 
@@ -42,6 +42,16 @@
    - `octave` (Wes Montgomery / Hendrix octave riffs)
 3. **`get_double_stop_notes(root, degree) -> Tuple[str, str]`**: Generates harmonized pairs.
 
+### `TASK-1.3` Refinements (Commit: `5ff5a74`)
+1. **`hybrid_blues` (The Major/Minor Hybrid Blues Scale)**:
+   - Formula: `[1, 2, b3, 3, 4, 5, 6, b7]` (8/9-note blues scale).
+   - Character notes: `['b3', '3', '6', 'b7']`.
+   - The iconic B.B. King, Clapton, SRV, and Duane Allman soloing scale blending sweet major notes with raw blues bending.
+2. **`bebop_dominant` (The Dominant Bebop Scale)**:
+   - Formula: `[1, 2, 3, 4, 5, 6, b7, 7]` (8 notes).
+   - Character notes: `['b7', '7']`.
+   - Adds the natural 7 chromatic passing tone between b7 and root, forcing all chord tones onto rhythmic downbeats in 8th-note runs.
+
 ### `TASK-1.4` Refinements (Commit: `0eceb63`)
 1. **`get_chord_arpeggio(symbol)`**: Generates sequential chord tones for single-note sweep and picking runs over chord changes.
 2. **`get_chord_embellishments(symbol)`**: Calculates Hendrix / Mayer hammer-on targets right inside the chord grip:
@@ -51,11 +61,8 @@
 
 ---
 
-## 🎯 Queued Intermediate Soloing Upgrades for Upcoming Tasks:
+## 🎯 Queued Intermediate Soloing Upgrades for `TASK-1.5`:
 
-* **For `TASK-1.3` (`scales.py`):**
-  - **Hybrid Pentatonic Scale:** Blends Minor Pentatonic ($1, b3, 4, 5, b7$) and Major Pentatonic ($1, 2, 3, 5, 6$) into a 9-note blues/rock soloing scale ($1, 2, b3, 3, 4, 5, 6, b7$).
-  - **Dominant Bebop Scale:** $1, 2, 3, 4, 5, 6, b7, 7$ (adds the natural 7 passing tone to align chord tones with downbeats).
 * **For `TASK-1.5` (`fretboard.py`):**
   - **The Diagonal / Extended Pentatonic Run:** 2-notes-per-string sliding highway connecting Box 5 $\rightarrow$ Box 1 $\rightarrow$ Box 2 $\rightarrow$ Box 3 across all 6 strings.
   - **The B.B. King Box:** Precomputed sweet spot on strings 1-2-3 around the root on string 2 with the characteristic major 6th.
@@ -71,7 +78,7 @@
 | **`TASK-0.2`** | Core Theory Data Schemas | 2026-11-02 | Type Checked | `backend/app/schemas/theory.py` (`ScaleDefinition`, `ChordDefinition`, `FretCoordinate`, `CagedBoxDefinition`, `ProgressionSection`) |
 | **`TASK-1.1`** | Pitch Class Algebra & Voice Leading Math | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/pitch.py` (Practical Mode E#->F, Case-insensitivity, Shortest voice-leading distance, Enharmonic equality, Circle of Fifths, Key accidentals) |
 | **`TASK-1.2`** | Interval Engine & Diads | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/intervals.py` (Rule of 9 inversions, double-stop diads: 3rds, 6ths, 4ths, octaves, compound #9/13) |
-| **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | 13/13 `pytest` | `backend/app/theory/scales.py` (Full Major, Natural/Harmonic/Melodic Minor, Pentatonics, Blues, 7 Modes, Phrygian Dominant) |
+| **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | 15/15 `pytest` | `backend/app/theory/scales.py` (Full Major/Minor, Modes, Hybrid Blues scale, Dominant Bebop, Relative keys) |
 | **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, arpeggios, Hendrix/Mayer embellishments) |
 | **`TASK-1.5`** | 24-Fret Guitar Matrix & CAGED 5-Box Engine | 2026-11-02 | 7/7 `pytest` | `backend/app/theory/fretboard.py` (Standard/Drop-D/Eb tunings, 24-fret matrix, CAGED box spans, movable string triads) |
-| **Total** | **Phase 1 Deterministic Engine** | | **56/56 Passing** | Complete mathematical and physical foundation |
+| **Total** | **Phase 1 Deterministic Engine** | | **58/58 Passing** | Complete mathematical and physical foundation |
