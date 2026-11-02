@@ -11,33 +11,43 @@
 | Status | Task ID | Name | Focus Area |
 |---|---|---|---|
 | 🟢 **COMPLETE** | **`TASK-1.1`** | **Pitch Class Algebra & Voice Leading Math** | Note math, enharmonics, shortest voice-leading, circle of fifths |
-| 🔄 **IN REVIEW** | **`TASK-1.2`** | **Interval Engine** | Target chord tones, tensions (#9, 13), degree spelling |
-| ⚪ **QUEUED** | **`TASK-1.3`** | **Scale & Mode Generator** | Adding Hybrid Pentatonic & Bebop scales |
-| ⚪ **QUEUED** | **`TASK-1.4`** | **Chord Formula & Inversion Parser** | Triad inversions & voice-leading grips |
+| 🟢 **COMPLETE** | **`TASK-1.2`** | **Interval Engine & Diads** | Rule of 9 inversions, double-stop diads (3rds, 6ths, 4ths, octaves) |
+| 🔄 **IN REVIEW** | **`TASK-1.3`** | **Scale & Mode Generator** | Adding Hybrid Pentatonic & Bebop scales |
+| 🟢 **COMPLETE** | **`TASK-1.4`** | **Chord Formula & Inversion Parser** | Triad inversions, sequential arpeggios, Hendrix/Mayer embellishments |
 | ⚪ **QUEUED** | **`TASK-1.5`** | **Fretboard Matrix & Soloing Boxes** | Adding Diagonal Pentatonic runs, 3NPS, & B.B. King box |
 
 ---
 
 ## 📜 Detailed Architecture & Feature Changelog (Reference Archive)
 
-### `TASK-1.1` Refinements & Additions (Latest Commits: `b50453d`, `46802b5`)
-1. **`shortest_semitone_distance(from_note, to_note) -> int`**:
-   - Calculates the minimal voice-leading fret delta ($-6$ to $+6$).
-   - e.g. `C` to `B` returns `-1` (slide 1 fret down instead of jumping 11 frets up).
-   - Essential for intermediate soloing when targeting chord tones over changes.
-2. **`are_enharmonic(note_a, note_b) -> bool`**:
-   - Checks if two note names vibrate at the identical pitch class (e.g. `C#` == `Db`, `E#` == `F`).
-   - Prevents soloing and chord comparison bugs when matching player tabs.
-3. **`get_key_accidentals(key) -> Dict`**:
-   - Returns exact accidental count and altered note list via the standard order of sharps (`F#, C#, G#, D#, A#, E#, B#`) and flats (`Bb, Eb, Ab, Db, Gb, Cb, Fb`).
-   - e.g. Key of `E` $\rightarrow$ 4 sharps (`F#, C#, G#, D#`).
-4. **`normalize_note_name(note) -> str`**:
-   - Automatic case-insensitivity: converts `c#` $\rightarrow$ `C#`, `bb` $\rightarrow$ `Bb`, `  f# ` $\rightarrow$ `F#`.
-5. **Negative Transpositions**:
-   - `transpose_note("C", -1)` $\rightarrow$ `"B"` (going down frets).
-6. **Circle of Fifths Helpers**:
-   - `get_circle_of_fifths()` (all 12 keys clockwise).
-   - `get_key_neighbors(key)` (instant $I, IV, V$ chords for jamming).
+### `TASK-1.1` Refinements (Commits: `b50453d`, `46802b5`)
+1. **`shortest_semitone_distance(from_note, to_note) -> int`**: Voice-leading minimal fret delta ($-6$ to $+6$).
+2. **`are_enharmonic(note_a, note_b) -> bool`**: Pitch equivalence checker (`C# == Db`, `E# == F`).
+3. **`get_key_accidentals(key) -> Dict`**: Key signature accidentals via Order of Sharps and Flats.
+4. **`normalize_note_name(note) -> str`**: Automatic case-insensitivity (`c#` $\rightarrow$ `C#`).
+5. **`transpose_note(note, -semitones)`**: Full support for transposing down frets.
+6. **`get_circle_of_fifths()` & `get_key_neighbors()`**: 12-hour clock and $I, IV, V$ jamming chords.
+
+### `TASK-1.2` Refinements (Commit: `ca75b47`)
+1. **`invert_interval(degree) -> str`**: Classical and guitar **Rule of 9**:
+   - Minor 3rd ($b3$) inverts to Major 6th ($6$) — the essential Hendrix/Mayer double-stop flip!
+   - Major 3rd ($3$) inverts to Minor 6th ($b6$).
+   - 4th ($4$) inverts to 5th ($5$), 5th ($5$) inverts to 4th ($4$).
+   - Minor 7th ($b7$) inverts to Major 2nd ($2$).
+2. **`classify_diad(degree) -> Dict`**: Identifies guitar double-stop types:
+   - `3rd_harmony` (Sweet vocal rock/country harmony)
+   - `6th_sliding` (Soul/gospel sliding diads on skipped strings 1 & 3 or 2 & 4)
+   - `4th_stab` (Rock/funk riff double stops - Smoke on the Water)
+   - `5th_power` (Power chord diad)
+   - `octave` (Wes Montgomery / Hendrix octave riffs)
+3. **`get_double_stop_notes(root, degree) -> Tuple[str, str]`**: Generates harmonized pairs.
+
+### `TASK-1.4` Refinements (Commit: `0eceb63`)
+1. **`get_chord_arpeggio(symbol)`**: Generates sequential chord tones for single-note sweep and picking runs over chord changes.
+2. **`get_chord_embellishments(symbol)`**: Calculates Hendrix / Mayer hammer-on targets right inside the chord grip:
+   - **`sus4`**: Hammering from 3rd to 4th (Classic Little Wing suspended fill)
+   - **`add9`**: Hammering from Root to 9th/2nd (Acoustic ballad color)
+   - **`sixth`**: Hammering from 5th to 6th (Curtis Mayfield / R&B soul fill)
 
 ---
 
@@ -59,9 +69,9 @@
 |---|---|---|---|---|
 | **`TASK-0.1`** | Monorepo Scaffolding & Virtualenv | 2026-11-02 | Python/Node OK | `backend/`, `data/`, `frontend/`, `.gitignore`, `requirements.txt`, `.venv` with `fastapi`, `pydantic`, `pytest` |
 | **`TASK-0.2`** | Core Theory Data Schemas | 2026-11-02 | Type Checked | `backend/app/schemas/theory.py` (`ScaleDefinition`, `ChordDefinition`, `FretCoordinate`, `CagedBoxDefinition`, `ProgressionSection`) |
-| **`TASK-1.1`** | Pitch Class Algebra & Enharmonic Resolution | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/pitch.py` (Practical Mode E#->F, Case-insensitivity, Shortest voice-leading distance, Enharmonic equality, Circle of Fifths, Key accidentals) |
-| **`TASK-1.2`** | Interval Engine | 2026-11-02 | 7/7 `pytest` | `backend/app/theory/intervals.py`, compound extensions (#9, 13), degree letter resolution |
+| **`TASK-1.1`** | Pitch Class Algebra & Voice Leading Math | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/pitch.py` (Practical Mode E#->F, Case-insensitivity, Shortest voice-leading distance, Enharmonic equality, Circle of Fifths, Key accidentals) |
+| **`TASK-1.2`** | Interval Engine & Diads | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/intervals.py` (Rule of 9 inversions, double-stop diads: 3rds, 6ths, 4ths, octaves, compound #9/13) |
 | **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | 13/13 `pytest` | `backend/app/theory/scales.py` (Full Major, Natural/Harmonic/Melodic Minor, Pentatonics, Blues, 7 Modes, Phrygian Dominant) |
-| **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 12/12 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, slash chords) |
+| **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, arpeggios, Hendrix/Mayer embellishments) |
 | **`TASK-1.5`** | 24-Fret Guitar Matrix & CAGED 5-Box Engine | 2026-11-02 | 7/7 `pytest` | `backend/app/theory/fretboard.py` (Standard/Drop-D/Eb tunings, 24-fret matrix, CAGED box spans, movable string triads) |
-| **Total** | **Phase 1 Deterministic Engine** | | **55/55 Passing** | Complete mathematical and physical foundation |
+| **Total** | **Phase 1 Deterministic Engine** | | **56/56 Passing** | Complete mathematical and physical foundation |
