@@ -74,16 +74,54 @@ PRACTICAL_MAP: Dict[str, str] = {
 # Keys that traditionally prefer flats
 FLAT_ROOTS = {"F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb", "Dm", "Gm", "Cm", "Fm", "Bbm", "Ebm"}
 
+# The Circle of Fifths (Clockwise: C -> G -> D -> A -> E -> B -> F#/Gb -> Db -> Ab -> Eb -> Bb -> F)
+CIRCLE_OF_FIFTHS: Tuple[str, ...] = (
+    "C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"
+)
+
+
+def normalize_note_name(note: str) -> str:
+    """Normalizes note string to proper capitalization and stripped whitespace.
+    
+    Examples:
+        'c#'   -> 'C#'
+        'bb'   -> 'Bb'
+        '  f# ' -> 'F#'
+        'g##'  -> 'G##'
+    """
+    clean = note.strip()
+    if not clean:
+        raise ValueError("Empty note string")
+    
+    # Capitalize the base letter, keep accidentals in lowercase (for 'b') or '#'
+    letter = clean[0].upper()
+    accidental = clean[1:]
+    
+    # Standardize accidentals (e.g. 'B' -> 'b', '#' -> '#')
+    norm_accidental = ""
+    for ch in accidental:
+        if ch in ("B", "b"):
+            norm_accidental += "b"
+        elif ch == "#":
+            norm_accidental += "#"
+        elif ch in ("X", "x"):
+            norm_accidental += "x"
+        else:
+            norm_accidental += ch
+            
+    return f"{letter}{norm_accidental}"
+
 
 def note_to_pitch_class(note: str) -> int:
     """Returns the pitch class (0-11) for any valid note name.
+    Case-insensitive (handles 'c#', 'bb', etc.).
     
     Raises:
         ValueError: If note is not recognized.
     """
-    clean_note = note.strip()
-    if clean_note in NOTE_NAME_TO_PITCH_CLASS:
-        return NOTE_NAME_TO_PITCH_CLASS[clean_note]
+    normalized = normalize_note_name(note)
+    if normalized in NOTE_NAME_TO_PITCH_CLASS:
+        return NOTE_NAME_TO_PITCH_CLASS[normalized]
     raise ValueError(f"Unknown note name: '{note}'")
 
 
@@ -102,22 +140,21 @@ def semitones_between(from_note: str, to_note: str) -> int:
 
 def parse_note(note: str) -> Tuple[str, str]:
     """Splits a note into (base_letter, accidental).
-    Example: 'C#' -> ('C', '#'), 'Bb' -> ('B', 'b'), 'D' -> ('D', '')
+    Case-insensitive.
+    Example: 'c#' -> ('C', '#'), 'bb' -> ('B', 'b'), 'D' -> ('D', '')
     """
-    clean = note.strip()
-    if not clean:
-        raise ValueError("Empty note string")
-    letter = clean[0].upper()
+    normalized = normalize_note_name(note)
+    letter = normalized[0]
     if letter not in DIATONIC_LETTERS:
         raise ValueError(f"Invalid note letter '{letter}' in '{note}'")
-    accidental = clean[1:]
+    accidental = normalized[1:]
     return letter, accidental
 
 
 def simplify_to_practical(note: str) -> str:
     """Simplifies awkward classical enharmonics to physical guitar frets (e.g. E# -> F)."""
-    clean = note.strip()
-    return PRACTICAL_MAP.get(clean, clean)
+    normalized = normalize_note_name(note)
+    return PRACTICAL_MAP.get(normalized, normalized)
 
 
 def spell_note_with_letter(
@@ -167,8 +204,9 @@ def spell_diatonic_scale(
     - In PRACTICAL mode (Default): Replaces academic artifacts (E#, B#, Cb, Fb) with their
       physical guitar fret equivalents (F, C, B, E).
     """
-    root_letter, _ = parse_note(root_note)
-    root_pc = note_to_pitch_class(root_note)
+    normalized_root = normalize_note_name(root_note)
+    root_letter, _ = parse_note(normalized_root)
+    root_pc = note_to_pitch_class(normalized_root)
     start_letter_idx = LETTER_INDEX[root_letter]
     
     if len(semitone_offsets) == 7:
@@ -180,8 +218,7 @@ def spell_diatonic_scale(
             spelled_notes.append(note)
         return spelled_notes
     else:
-        # For non-7-note scales (pentatonic, blues, etc.)
-        prefer_flats = (root_note in FLAT_ROOTS) or ("b" in root_note)
+        prefer_flats = (normalized_root in FLAT_ROOTS) or ("b" in normalized_root)
         notes = [pitch_class_to_note((root_pc + offset) % 12, prefer_flats=prefer_flats) for offset in semitone_offsets]
         if mode == NotationMode.PRACTICAL:
             return [simplify_to_practical(n) for n in notes]
@@ -189,9 +226,56 @@ def spell_diatonic_scale(
 
 
 def transpose_note(note: str, semitones: int, prefer_flats: Optional[bool] = None) -> str:
-    """Transposes a note by semitones delta."""
-    pc = note_to_pitch_class(note)
+    """Transposes a note by semitones delta (supports positive and negative semitones).
+    
+    Examples:
+        transpose_note("C", 2)   -> "D"  (up 2 frets)
+        transpose_note("C", -1)  -> "B"  (down 1 fret)
+        transpose_note("E", -2)  -> "D"  (down 2 frets)
+    """
+    normalized = normalize_note_name(note)
+    pc = note_to_pitch_class(normalized)
     new_pc = (pc + semitones) % 12
     if prefer_flats is None:
-        prefer_flats = (note in FLAT_ROOTS) or ("b" in note)
+        prefer_flats = (normalized in FLAT_ROOTS) or ("b" in normalized)
     return pitch_class_to_note(new_pc, prefer_flats=prefer_flats)
+
+
+def get_circle_of_fifths() -> List[str]:
+    """Returns the 12 keys in clockwise order around the Circle of Fifths.
+    Starting at C (12 o'clock).
+    """
+    return list(CIRCLE_OF_FIFTHS)
+
+
+def get_key_neighbors(key: str) -> Dict[str, str]:
+    """Returns the I (Tonic), IV (Subdominant, 1 step counter-clockwise),
+    and V (Dominant, 1 step clockwise) neighbor chords for any key on the Circle of Fifths.
+    
+    Example:
+        get_key_neighbors("C") -> {'I': 'C', 'IV': 'F', 'V': 'G'}
+        get_key_neighbors("G") -> {'I': 'G', 'IV': 'C', 'V': 'D'}
+        get_key_neighbors("E") -> {'I': 'E', 'IV': 'A', 'V': 'B'}
+    """
+    normalized = normalize_note_name(key)
+    # Convert enharmonic if needed to match circle representation
+    norm_lookup = normalized
+    if norm_lookup == "F#":
+        norm_lookup = "F#"
+    elif norm_lookup == "Gb":
+        norm_lookup = "F#"
+        
+    if norm_lookup not in CIRCLE_OF_FIFTHS:
+        # Fallback to pitch class match
+        target_pc = note_to_pitch_class(normalized)
+        norm_lookup = [k for k in CIRCLE_OF_FIFTHS if note_to_pitch_class(k) == target_pc][0]
+        
+    idx = CIRCLE_OF_FIFTHS.index(norm_lookup)
+    iv_idx = (idx - 1) % 12
+    v_idx = (idx + 1) % 12
+    
+    return {
+        "I": CIRCLE_OF_FIFTHS[idx],
+        "IV": CIRCLE_OF_FIFTHS[iv_idx],
+        "V": CIRCLE_OF_FIFTHS[v_idx],
+    }

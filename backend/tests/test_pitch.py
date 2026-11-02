@@ -2,6 +2,7 @@
 import pytest
 from backend.app.theory.pitch import (
     NotationMode,
+    normalize_note_name,
     note_to_pitch_class,
     pitch_class_to_note,
     semitones_between,
@@ -10,10 +11,21 @@ from backend.app.theory.pitch import (
     spell_note_with_letter,
     spell_diatonic_scale,
     transpose_note,
+    get_circle_of_fifths,
+    get_key_neighbors,
 )
 
 # Major scale interval formula in semitones (W-W-H-W-W-W-H)
 MAJOR_SCALE_OFFSETS = [0, 2, 4, 5, 7, 9, 11]
+
+
+def test_normalize_note_name():
+    assert normalize_note_name("c") == "C"
+    assert normalize_note_name("c#") == "C#"
+    assert normalize_note_name("bb") == "Bb"
+    assert normalize_note_name("  f#  ") == "F#"
+    assert normalize_note_name("ab") == "Ab"
+    assert normalize_note_name("eb") == "Eb"
 
 
 def test_note_to_pitch_class_naturals():
@@ -24,6 +36,15 @@ def test_note_to_pitch_class_naturals():
     assert note_to_pitch_class("G") == 7
     assert note_to_pitch_class("A") == 9
     assert note_to_pitch_class("B") == 11
+
+
+def test_note_to_pitch_class_case_insensitive():
+    # Lowercase inputs must be accepted cleanly
+    assert note_to_pitch_class("c") == 0
+    assert note_to_pitch_class("c#") == 1
+    assert note_to_pitch_class("db") == 1
+    assert note_to_pitch_class("eb") == 3
+    assert note_to_pitch_class("  g# ") == 8
 
 
 def test_note_to_pitch_class_accidentals():
@@ -60,6 +81,9 @@ def test_parse_note():
     assert parse_note("F#") == ("F", "#")
     assert parse_note("Bb") == ("B", "b")
     assert parse_note("G##") == ("G", "##")
+    # Case-insensitive
+    assert parse_note("c#") == ("C", "#")
+    assert parse_note("bb") == ("B", "b")
 
 
 def test_practical_simplifications():
@@ -100,8 +124,44 @@ def test_g_major_scale():
     assert notes == ["G", "A", "B", "C", "D", "E", "F#"]
 
 
-def test_transpose_note():
+def test_transpose_note_positive_and_negative():
+    # Transposing up (positive)
     assert transpose_note("A", 3) == "C"
     assert transpose_note("E", 1) == "F"
     assert transpose_note("D", 7) == "A"
     assert transpose_note("G", 11) == "F#"
+    # Transposing down (negative semitones - going down frets)
+    assert transpose_note("C", -1) == "B"   # 1 fret down from C is B
+    assert transpose_note("E", -2) == "D"   # 2 frets down from E is D
+    assert transpose_note("A", -3) == "F#"  # 3 frets down from A is F#
+    assert transpose_note("D", -5) == "A"   # 5 frets down from D is A
+
+
+def test_circle_of_fifths():
+    circle = get_circle_of_fifths()
+    assert len(circle) == 12
+    assert circle[0] == "C"
+    assert circle[1] == "G"
+    assert circle[2] == "D"
+    assert circle[3] == "A"
+    assert circle[4] == "E"
+    assert circle[5] == "B"
+    assert circle[-1] == "F"
+
+
+def test_key_neighbors_i_iv_v():
+    # In C Major: I = C, IV = F, V = G
+    c_neighbors = get_key_neighbors("C")
+    assert c_neighbors == {"I": "C", "IV": "F", "V": "G"}
+
+    # In G Major: I = G, IV = C, V = D
+    g_neighbors = get_key_neighbors("G")
+    assert g_neighbors == {"I": "G", "IV": "C", "V": "D"}
+
+    # In E Major: I = E, IV = A, V = B (Blues in E chords!)
+    e_neighbors = get_key_neighbors("E")
+    assert e_neighbors == {"I": "E", "IV": "A", "V": "B"}
+
+    # Case-insensitive
+    a_neighbors = get_key_neighbors("a")
+    assert a_neighbors == {"I": "A", "IV": "D", "V": "E"}
