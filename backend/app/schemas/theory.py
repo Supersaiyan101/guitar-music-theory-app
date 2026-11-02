@@ -71,6 +71,7 @@ class FretCoordinate(BaseModel):
     interval: Optional[str] = Field(default=None, description="Degree relative to current root ('1', '3', 'b7')")
     is_root: bool = False
     caged_box: Optional[int] = Field(default=None, ge=1, le=5, description="CAGED box index (1 to 5)")
+    technique: Optional[str] = Field(default=None, description="Optional technique flag: 'slide', 'bend', 'hammer', 'root_anchor'")
 
 
 class CagedBoxDefinition(BaseModel):

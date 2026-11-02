@@ -13,8 +13,8 @@
 | 🟢 **COMPLETE** | **`TASK-1.1`** | **Pitch Class Algebra & Voice Leading Math** | Note math, enharmonics, shortest voice-leading, circle of fifths |
 | 🟢 **COMPLETE** | **`TASK-1.2`** | **Interval Engine & Diads** | Rule of 9 inversions, double-stop diads (3rds, 6ths, 4ths, octaves) |
 | 🟢 **COMPLETE** | **`TASK-1.3`** | **Scale & Mode Generator** | Hybrid Pentatonic Blues (B.B. King/SRV) & Dominant Bebop scales |
-| 🟢 **COMPLETE** | **`TASK-1.4`** | **Chord Formula & Inversion Parser** | Triad inversions, sequential arpeggios, Hendrix/Mayer embellishments |
-| 🔄 **IN REVIEW** | **`TASK-1.5`** | **Fretboard Matrix & Soloing Boxes** | Adding Diagonal Pentatonic runs, 3NPS, & B.B. King box |
+| 🟢 **COMPLETE** | **`TASK-1.4`** | **Chord Formula & Inversion Parser** | Triad inversions, sequential arpeggios, Hendrix/Mayer embellishments, shell voicings |
+| 🟢 **COMPLETE** | **`TASK-1.5`** | **Fretboard Matrix & Soloing Boxes** | CAGED anchors & voicings, Diagonal Highway, B.B./Albert King boxes, 3NPS, Octave GPS |
 
 ---
 
@@ -63,14 +63,15 @@
 5. **`get_tritone_substitution(symbol)`**: Calculates the dominant chord 6 semitones away sharing identical guide tones (e.g. G7 $\rightarrow$ Db7).
 6. **`get_spread_triad_notes(root, quality)`**: Eric Johnson / Mateus Asato open-voiced $1 - 5 - 10$ spread triads for resonant chord melodies.
 
----
-
-## 🎯 Queued Intermediate Soloing Upgrades for `TASK-1.5`:
-
-* **For `TASK-1.5` (`fretboard.py`):**
-  - **The Diagonal / Extended Pentatonic Run:** 2-notes-per-string sliding highway connecting Box 5 $\rightarrow$ Box 1 $\rightarrow$ Box 2 $\rightarrow$ Box 3 across all 6 strings.
-  - **The B.B. King Box:** Precomputed sweet spot on strings 1-2-3 around the root on string 2 with the characteristic major 6th.
-  - **3-Notes-Per-String (3NPS):** 7 picking shapes for fast, fluid alternate-picked modal runs.
+### `TASK-1.5` Refinements (Commit: `feat(theory)`)
+1. **`get_caged_root_anchors(root)`**: Multi-layer CAGED system root map connecting all 5 shapes across strings 1 to 6.
+2. **`get_caged_chord_voicing(root, shape, quality)`**: Generates physical fretboard grips for all 5 CAGED shapes across major, minor, dominant 7th, minor 7th, and major 7th.
+3. **`get_diagonal_pentatonic_run(root, quality)`**: The "Pentatonic Highway" — continuous 2-notes-per-string sliding diagonal connecting Box 5 $\rightarrow$ Box 1 $\rightarrow$ Box 2 $\rightarrow$ Box 3 across all 6 strings.
+4. **`get_bb_king_box(root)`**: B.B. King sweet spot on strings 1-2-3 centered around the root on string 2 with the signature Major 6th bend and sweet Major 3rd slip.
+5. **`get_albert_king_box(root)`**: High-register blues bending box on strings 1 & 2 featuring heavy 1.5-step / minor 3rd overbends.
+6. **`get_three_notes_per_string_shapes(root, scale_type)`**: 7 modal 3NPS shapes covering the entire neck with exactly 3 notes on every string for uniform alternate picking and speed legato.
+7. **`get_octave_coordinates(string, fret)`**: Octave GPS identifying the 4 Wes Montgomery / Jimi Hendrix octave shapes (6-to-4, 5-to-3, 4-to-2, 3-to-1) and horizontal 12-fret octaves.
+8. **`get_static_position_progression_shapes(chords, target_fret)`**: Pro voice-leading tool calculating the optimal CAGED shape for every chord in a progression to play over changes in a single hand position without jumping across the neck.
 
 ---
 
@@ -83,6 +84,7 @@
 | **`TASK-1.1`** | Pitch Class Algebra & Voice Leading Math | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/pitch.py` (Practical Mode E#->F, Case-insensitivity, Shortest voice-leading distance, Enharmonic equality, Circle of Fifths, Key accidentals) |
 | **`TASK-1.2`** | Interval Engine & Diads | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/intervals.py` (Rule of 9 inversions, double-stop diads: 3rds, 6ths, 4ths, octaves, compound #9/13) |
 | **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | 15/15 `pytest` | `backend/app/theory/scales.py` (Full Major/Minor, Modes, Hybrid Blues scale, Dominant Bebop, Relative keys) |
-| **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, arpeggios, Hendrix/Mayer embellishments, shell voicings, superimposed triads, tritone substitutions, spread triads) |
-| **`TASK-1.5`** | 24-Fret Guitar Matrix & CAGED 5-Box Engine | 2026-11-02 | 7/7 `pytest` | `backend/app/theory/fretboard.py` (Standard/Drop-D/Eb tunings, 24-fret matrix, CAGED box spans, movable string triads) |
-| **Total** | **Phase 1 Deterministic Engine** | | **62/62 Passing** | Complete mathematical and physical foundation |
+| **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 14/14 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, arpeggios, Hendrix/Mayer embellishments, shell voicings, superimposed triads, tritone substitutions, spread triads) |
+| **`TASK-1.5`** | 24-Fret Guitar Matrix & Soloing Boxes | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/fretboard.py` (Standard/Drop-D/Eb tunings, 24-fret matrix, CAGED root anchors & voicings, Diagonal Highway, B.B./Albert King boxes, 3NPS, Octave GPS, static voice-leading) |
+| **Total** | **Phase 1 Deterministic Engine** | | **71/71 Passing (100%)** | Complete mathematical, soloing, and physical guitar foundation |
+
