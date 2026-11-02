@@ -14,8 +14,8 @@
 | Phase | Description | Micro-Tasks | Status |
 |---|---|:---:|:---:|
 | **Phase 0** | Workspace Scaffolding, Schemas & Seed Scrapers | 4 Micro-tasks | 🟡 In Progress |
-| **Phase 1** | Deterministic Music Theory Engine (Pure Math & Algorithms) | 5 Micro-tasks | ⚪ Queued |
-| **Phase 2** | Interactive SVG Fretboard & WebAudio Note Player | 5 Micro-tasks | ⚪ Queued |
+| **Phase 1** | Deterministic Music Theory Engine (Pure Math & Algorithms) | 5 Micro-tasks | 🟢 100% Complete |
+| **Phase 2** | Interactive SVG Fretboard & WebAudio Note Player | 5 Micro-tasks | 🟡 In Progress |
 | **Phase 3** | Song Metadata & Harmonic Progression Analyzer | 4 Micro-tasks | ⚪ Queued |
 | **Phase 4** | Qdrant Local Vector RAG & Blues/Rock AI Coach | 4 Micro-tasks | ⚪ Queued |
 | **Phase 5** | WebAudio Backing Track Engine & Speed Practice Tools | 4 Micro-tasks | ⚪ Queued |
@@ -48,7 +48,7 @@
   * *Deliverable:* `backend/app/theory/scales.py` + `backend/tests/test_scales.py`.
 - [x] **`TASK-1.4`**: Chord Formula & Quality Parser (Triads, 7ths, altered dominants, slash chords).
   * *Deliverable:* `backend/app/theory/chords.py` + `backend/tests/test_chords.py`.
-- [ ] **`TASK-1.5`**: 24-Fret Guitar Matrix & CAGED 5-Box Position Engine (Standard & alternate tunings, 3NPS coordinates).
+- [x] **`TASK-1.5`**: 24-Fret Guitar Matrix & CAGED 5-Box Position Engine (Standard & alternate tunings, 3NPS coordinates).
   * *Deliverable:* `backend/app/theory/fretboard.py` + `backend/tests/test_fretboard.py`.
 
 ---
