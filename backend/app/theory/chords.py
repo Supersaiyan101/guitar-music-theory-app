@@ -2,7 +2,8 @@
 
 Deconstructs any chord symbol (triads, 7ths, Hendrix chords, altered dominants,
 slash chords) into root, intervals, and constituent spelled chord tones.
-Supports triad inversions, sequential arpeggios, and Hendrix/Mayer chord embellishments.
+Supports triad inversions, sequential arpeggios, Hendrix/Mayer chord embellishments,
+shell voicings (guide tones), superimposed triads, tritone substitutions, and spread triads.
 """
 from typing import Any, Dict, List, Optional, Tuple
 from backend.app.schemas.theory import ChordDefinition, ChordQuality
@@ -10,6 +11,7 @@ from backend.app.theory.pitch import (
     NotationMode,
     note_to_pitch_class,
     simplify_to_practical,
+    transpose_note,
 )
 from backend.app.theory.intervals import get_note_at_interval
 
@@ -329,6 +331,173 @@ def deconstruct_chord(
     )
 
 
+def get_shell_voicing(
+    symbol: str,
+    mode: NotationMode = NotationMode.PRACTICAL
+) -> List[str]:
+    """Extracts the Guide Tones (Shell Voicing) for a 7th or extended chord:
+    Root + 3rd + 7th (omitting the redundant 5th).
+    
+    Used in jazz, funk, and neo-soul (Freddie Green, Joe Pass, Mateus Asato, Tom Misch)
+    for transparent, un-muddy band comping.
+    
+    Examples:
+        get_shell_voicing("G7")    -> ['G', 'B', 'F']     (Root, 3rd, b7)
+        get_shell_voicing("Cmaj7") -> ['C', 'E', 'B']     (Root, 3rd, 7)
+        get_shell_voicing("Am7")   -> ['A', 'C', 'G']     (Root, b3, b7)
+        get_shell_voicing("Bm7b5") -> ['B', 'D', 'A']     (Root, b3, b7)
+    """
+    chord = deconstruct_chord(symbol, mode=mode)
+    
+    # Check if chord has a 3rd and a 7th
+    has_3rd = any(i in ("3", "b3") for i in chord.intervals)
+    has_7th = any(i in ("7", "b7", "bb7") for i in chord.intervals)
+    
+    if not (has_3rd and has_7th):
+        # Fallback to standard chord tones if not a 7th chord
+        return chord.tones
+        
+    shell_notes = [chord.root]
+    for tone, interval in zip(chord.tones, chord.intervals):
+        if interval in ("3", "b3") and tone not in shell_notes:
+            shell_notes.append(tone)
+        elif interval in ("7", "b7", "bb7") and tone not in shell_notes:
+            shell_notes.append(tone)
+            
+    return shell_notes
+
+
+def get_superimposed_triads(
+    symbol: str,
+    mode: NotationMode = NotationMode.PRACTICAL
+) -> Dict[str, Any]:
+    """Calculates simple 3-note triads a soloist can superimpose over this chord
+    to automatically outline sophisticated extensions (9ths, 11ths, 13ths) without
+    playing the root!
+    
+    Examples:
+        Over Cmaj7:
+            - Em triad (outlines 3-5-7) -> floating Maj7 sound
+            - Am triad (outlines 6-1-3) -> soulful C6 sound
+        Over Dm7:
+            - F Major triad (outlines b3-5-b7) -> pure Dm7 arpeggio
+            - Am triad (outlines 5-b7-9) -> Dm9 color
+        Over G7:
+            - Bdim triad (outlines 3-5-b7) -> rootless dominant
+            - Db Major triad (tritone substitution)
+    """
+    chord = deconstruct_chord(symbol, mode=mode)
+    root = chord.root
+    quality = chord.quality
+    
+    substitutions: Dict[str, Any] = {}
+    
+    if quality in (ChordQuality.MAJOR_SEVENTH, ChordQuality.MAJOR):
+        # Mediant triad: minor triad built on the 3rd (e.g. Em over C)
+        third_note = get_note_at_interval(root, "3", mode=mode)
+        substitutions["mediant_triad"] = {
+            "triad": f"{third_note}m",
+            "outlines": "3 - 5 - 7",
+            "effect": "Pure rootless Maj7 floating sound (acoustic/jazz)",
+        }
+        # Submediant triad: minor triad built on the 6th (e.g. Am over C)
+        sixth_note = get_note_at_interval(root, "6", mode=mode)
+        substitutions["submediant_triad"] = {
+            "triad": f"{sixth_note}m",
+            "outlines": "6 - 1 - 3",
+            "effect": "Warm Major 6th / soul sound (Gospel / Mayer)",
+        }
+    elif quality in (ChordQuality.MINOR_SEVENTH, ChordQuality.MINOR):
+        # Relative major triad built on the b3 (e.g. F over Dm)
+        b3_note = get_note_at_interval(root, "b3", mode=mode)
+        substitutions["relative_major_triad"] = {
+            "triad": b3_note,
+            "outlines": "b3 - 5 - b7",
+            "effect": "Smooth minor 7th outline without clashing with the bass",
+        }
+        # Minor triad built on the 5th (e.g. Am over Dm)
+        fifth_note = get_note_at_interval(root, "5", mode=mode)
+        substitutions["fifth_triad"] = {
+            "triad": f"{fifth_note}m",
+            "outlines": "5 - b7 - 9",
+            "effect": "Modern Minor 9th color (Steely Dan / Pink Floyd)",
+        }
+    elif quality in (ChordQuality.DOMINANT_SEVENTH, ChordQuality.ALTERED_DOMINANT):
+        # Diminished triad on the 3rd (e.g. Bdim over G7)
+        third_note = get_note_at_interval(root, "3", mode=mode)
+        substitutions["leading_tone_triad"] = {
+            "triad": f"{third_note}dim",
+            "outlines": "3 - 5 - b7",
+            "effect": "Rootless dominant tension driving resolution to tonic",
+        }
+        # Tritone substitution triad (e.g. Db over G7)
+        tritone_note = get_note_at_interval(root, "b5", mode=mode)
+        substitutions["tritone_sub_triad"] = {
+            "triad": tritone_note,
+            "outlines": "b5 - b7 - b9 (Tritone Sub)",
+            "effect": "Chromatic bebop outside tension resolving down a half-step",
+        }
+        
+    return {
+        "chord": chord.symbol,
+        "superimposed_triads": substitutions,
+    }
+
+
+def get_tritone_substitution(
+    symbol: str,
+    mode: NotationMode = NotationMode.PRACTICAL
+) -> Optional[str]:
+    """Calculates the Tritone Substitution for any dominant 7th chord
+    (the dominant chord located a tritone / 6 semitones away).
+    
+    Both chords share the exact same 3rd and b7th guide tones!
+    
+    Examples:
+        get_tritone_substitution("G7")  -> "Db7"
+        get_tritone_substitution("E7")  -> "Bb7"
+        get_tritone_substitution("A7")  -> "Eb7"
+        get_tritone_substitution("Cmaj7") -> None (Only dominant chords have tritone subs)
+    """
+    chord = deconstruct_chord(symbol, mode=mode)
+    if chord.quality not in (ChordQuality.DOMINANT_SEVENTH, ChordQuality.ALTERED_DOMINANT):
+        return None
+        
+    # Transpose root by 6 semitones (tritone)
+    tritone_root = transpose_note(chord.root, 6, prefer_flats=True)
+    if mode == NotationMode.PRACTICAL:
+        tritone_root = simplify_to_practical(tritone_root)
+        
+    # Reconstruct with the same suffix (e.g. 7 or 7#9 or 9)
+    _, suffix, _ = parse_chord_symbol(symbol)
+    return f"{tritone_root}{suffix}"
+
+
+def get_spread_triad_notes(
+    root: str,
+    quality: str = "maj",
+    mode: NotationMode = NotationMode.PRACTICAL
+) -> List[str]:
+    """Generates the open-voiced Spread Triad notes (1 - 5 - 10/3rd up an octave).
+    
+    Used by Eric Johnson, Mateus Asato, and acoustic fingerstyle players
+    for a lush, resonant grand-piano guitar voicing across non-adjacent strings.
+    
+    Examples:
+        get_spread_triad_notes("G", "maj") -> ['G', 'D', 'B']  (1: G, 5: D, 10: B)
+        get_spread_triad_notes("A", "min") -> ['A', 'E', 'C']  (1: A, 5: E, 10: C)
+    """
+    clean_root = root.strip().capitalize()
+    chord = deconstruct_chord(f"{clean_root}{quality if quality != 'maj' else ''}", mode=mode)
+    
+    root_note = chord.tones[0]
+    third_note = chord.tones[1]
+    fifth_note = chord.tones[2]
+    
+    # Spread voicing order: Root (1), Fifth (5), Tenth (3rd an octave higher)
+    return [root_note, fifth_note, third_note]
+
+
 def get_chord_arpeggio(
     symbol: str,
     include_octave: bool = True,
@@ -353,22 +522,10 @@ def get_chord_embellishments(
 ) -> Dict[str, Any]:
     """Calculates the classic Hendrix / Mayer chord embellishment target notes
     (the hammer-on / pull-off color tones right inside the chord grip).
-    
-    Identifies:
-        - Sus4 embellishment (hammering from 3rd to 4th)
-        - Add9 / Sus2 embellishment (hammering from Root to 2nd/9th)
-        - 6th embellishment (hammering from 5th to 6th)
-    
-    Example:
-        get_chord_embellishments("C") ->
-            sus4: F (hammer on from E)
-            add9: D (hammer on from C)
-            six:  A (hammer on from G)
     """
     chord = deconstruct_chord(symbol, mode=mode)
     root = chord.root
     
-    # Calculate embellishment notes
     sus4_note = get_note_at_interval(root, "4", mode=mode)
     add9_note = get_note_at_interval(root, "2", mode=mode)
     six_note = get_note_at_interval(root, "6", mode=mode)

@@ -52,12 +52,16 @@
    - Character notes: `['b7', '7']`.
    - Adds the natural 7 chromatic passing tone between b7 and root, forcing all chord tones onto rhythmic downbeats in 8th-note runs.
 
-### `TASK-1.4` Refinements (Commit: `0eceb63`)
+### `TASK-1.4` Refinements (Commits: `0eceb63`, `feat(theory)`)
 1. **`get_chord_arpeggio(symbol)`**: Generates sequential chord tones for single-note sweep and picking runs over chord changes.
 2. **`get_chord_embellishments(symbol)`**: Calculates Hendrix / Mayer hammer-on targets right inside the chord grip:
    - **`sus4`**: Hammering from 3rd to 4th (Classic Little Wing suspended fill)
    - **`add9`**: Hammering from Root to 9th/2nd (Acoustic ballad color)
    - **`sixth`**: Hammering from 5th to 6th (Curtis Mayfield / R&B soul fill)
+3. **`get_shell_voicing(symbol)`**: Guide tones (Root + 3rd + 7th, dropping redundant 5th) for jazz/funk/neo-soul comping without muddiness.
+4. **`get_superimposed_triads(symbol)`**: Outlines upper extensions (9ths, 11ths, 13ths) by playing simple 3-note triads over changes (e.g. Em or Am over Cmaj7, Bdim or Db over G7).
+5. **`get_tritone_substitution(symbol)`**: Calculates the dominant chord 6 semitones away sharing identical guide tones (e.g. G7 $\rightarrow$ Db7).
+6. **`get_spread_triad_notes(root, quality)`**: Eric Johnson / Mateus Asato open-voiced $1 - 5 - 10$ spread triads for resonant chord melodies.
 
 ---
 
@@ -79,6 +83,6 @@
 | **`TASK-1.1`** | Pitch Class Algebra & Voice Leading Math | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/pitch.py` (Practical Mode E#->F, Case-insensitivity, Shortest voice-leading distance, Enharmonic equality, Circle of Fifths, Key accidentals) |
 | **`TASK-1.2`** | Interval Engine & Diads | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/intervals.py` (Rule of 9 inversions, double-stop diads: 3rds, 6ths, 4ths, octaves, compound #9/13) |
 | **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | 15/15 `pytest` | `backend/app/theory/scales.py` (Full Major/Minor, Modes, Hybrid Blues scale, Dominant Bebop, Relative keys) |
-| **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, arpeggios, Hendrix/Mayer embellishments) |
+| **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 10/10 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, arpeggios, Hendrix/Mayer embellishments, shell voicings, superimposed triads, tritone substitutions, spread triads) |
 | **`TASK-1.5`** | 24-Fret Guitar Matrix & CAGED 5-Box Engine | 2026-11-02 | 7/7 `pytest` | `backend/app/theory/fretboard.py` (Standard/Drop-D/Eb tunings, 24-fret matrix, CAGED box spans, movable string triads) |
-| **Total** | **Phase 1 Deterministic Engine** | | **58/58 Passing** | Complete mathematical and physical foundation |
+| **Total** | **Phase 1 Deterministic Engine** | | **62/62 Passing** | Complete mathematical and physical foundation |

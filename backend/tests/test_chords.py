@@ -7,6 +7,10 @@ from backend.app.theory.chords import (
     get_chord_arpeggio,
     get_chord_embellishments,
     get_triad_inversion_notes,
+    get_shell_voicing,
+    get_superimposed_triads,
+    get_tritone_substitution,
+    get_spread_triad_notes,
     list_supported_chords,
 )
 
@@ -101,3 +105,48 @@ def test_list_supported_chords():
     assert "7#9" in chords
     assert "m7b5" in chords
     assert len(chords) >= 20
+
+
+def test_get_shell_voicings():
+    # Guide tones: Root + 3rd + 7th (omits 5th)
+    assert get_shell_voicing("G7") == ["G", "B", "F"]
+    assert get_shell_voicing("Cmaj7") == ["C", "E", "B"]
+    assert get_shell_voicing("Am7") == ["A", "C", "G"]
+    assert get_shell_voicing("Bm7b5") == ["B", "D", "A"]
+
+
+def test_get_superimposed_triads():
+    # Over Cmaj7: mediant Em (3-5-7) and submediant Am (6-1-3)
+    cmaj7_subs = get_superimposed_triads("Cmaj7")
+    assert cmaj7_subs["chord"] == "Cmaj7"
+    assert cmaj7_subs["superimposed_triads"]["mediant_triad"]["triad"] == "Em"
+    assert cmaj7_subs["superimposed_triads"]["submediant_triad"]["triad"] == "Am"
+
+    # Over Dm7: relative major F (b3-5-b7) and fifth triad Am (5-b7-9)
+    dm7_subs = get_superimposed_triads("Dm7")
+    assert dm7_subs["superimposed_triads"]["relative_major_triad"]["triad"] == "F"
+    assert dm7_subs["superimposed_triads"]["fifth_triad"]["triad"] == "Am"
+
+    # Over G7: leading tone Bdim and tritone sub Db
+    g7_subs = get_superimposed_triads("G7")
+    assert g7_subs["superimposed_triads"]["leading_tone_triad"]["triad"] == "Bdim"
+    assert g7_subs["superimposed_triads"]["tritone_sub_triad"]["triad"] == "Db"
+
+
+def test_get_tritone_substitution():
+    # Dominant 7th tritone substitutions (6 semitones away)
+    assert get_tritone_substitution("G7") == "Db7"
+    assert get_tritone_substitution("C7") == "Gb7"
+    assert get_tritone_substitution("E7") == "Bb7"
+    assert get_tritone_substitution("A7") == "Eb7"
+    # Non-dominant chords return None
+    assert get_tritone_substitution("Cmaj7") is None
+    assert get_tritone_substitution("Am7") is None
+
+
+def test_get_spread_triad_notes():
+    # Open-voiced Eric Johnson / Mateus Asato style: 1 - 5 - 10 (3rd + octave)
+    assert get_spread_triad_notes("G", "maj") == ["G", "D", "B"]
+    assert get_spread_triad_notes("C", "maj") == ["C", "G", "E"]
+    assert get_spread_triad_notes("A", "min") == ["A", "E", "C"]
+
