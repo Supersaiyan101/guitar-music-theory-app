@@ -57,8 +57,24 @@ def test_e_blues_scale():
     assert scale.notes == ["E", "G", "A", "Bb", "B", "D"]
 
 
+def test_a_hybrid_blues_scale():
+    # Blends A Minor & Major Pentatonic: A, B, C, C#, D, E, F#, G
+    scale = get_scale("A", "hybrid_blues")
+    assert scale.notes == ["A", "B", "C", "C#", "D", "E", "F#", "G"]
+    assert scale.intervals == ["1", "2", "b3", "3", "4", "5", "6", "b7"]
+    assert "b3" in scale.character_notes
+    assert "3" in scale.character_notes
+
+
+def test_g_bebop_dominant_scale():
+    # Mixolydian + natural 7 passing tone: G, A, B, C, D, E, F, F#
+    scale = get_scale("G", "bebop_dominant")
+    assert scale.notes == ["G", "A", "B", "C", "D", "E", "F", "F#"]
+    assert scale.intervals == ["1", "2", "3", "4", "5", "6", "b7", "7"]
+    assert len(scale.notes) == 8
+
+
 def test_modes_of_c_major():
-    # All modes of C Major must share the exact same 7 pitch classes
     c_notes = set(["C", "D", "E", "F", "G", "A", "B"])
     
     dorian = get_scale("D", "dorian")
@@ -101,10 +117,10 @@ def test_relative_keys():
 
 def test_f_sharp_major_practical_vs_academic():
     scale_practical = get_scale("F#", "major", mode=NotationMode.PRACTICAL)
-    assert scale_practical.notes[-1] == "F"  # Physical fret on guitar
+    assert scale_practical.notes[-1] == "F"
 
     scale_academic = get_scale("F#", "major", mode=NotationMode.ACADEMIC)
-    assert scale_academic.notes[-1] == "E#"  # Classical diatonic spelling
+    assert scale_academic.notes[-1] == "E#"
 
 
 def test_scale_aliases():
@@ -115,6 +131,14 @@ def test_scale_aliases():
     s3 = get_scale("A", "jazz_minor")
     s4 = get_scale("A", "melodic_minor")
     assert s3.notes == s4.notes
+
+    s5 = get_scale("A", "hybrid_pentatonic")
+    s6 = get_scale("A", "hybrid_blues")
+    assert s5.notes == s6.notes
+
+    s7 = get_scale("G", "bebop")
+    s8 = get_scale("G", "bebop_dominant")
+    assert s7.notes == s8.notes
 
 
 def test_invalid_scale():

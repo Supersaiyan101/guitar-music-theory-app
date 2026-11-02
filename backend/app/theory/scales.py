@@ -1,7 +1,8 @@
 """Scale and Mode Generator for Guitar Theory Kingdom.
 
 Supports full major and minor scales (Natural, Harmonic, Melodic),
-pentatonics, blues scales, church modes, and exotic shred scales.
+pentatonics, blues scales, church modes, exotic shred scales,
+plus intermediate soloing scales: Hybrid Pentatonic Blues and Dominant Bebop.
 """
 from typing import Dict, List, Optional
 from backend.app.schemas.theory import ScaleCategory, ScaleDefinition
@@ -142,7 +143,25 @@ SCALE_TEMPLATES: Dict[str, ScaleTemplate] = {
         description="Major pentatonic with the flat-three blue note curl into the major 3rd."
     ),
 
-    # The Remaining Church Modes
+    # Intermediate Soloing Scales
+    "hybrid_blues": ScaleTemplate(
+        name="Major/Minor Hybrid Blues Scale",
+        category=ScaleCategory.BLUES,
+        formula=[0, 2, 3, 4, 5, 7, 9, 10],
+        intervals=["1", "2", "b3", "3", "4", "5", "6", "b7"],
+        character_notes=["b3", "3", "6", "b7"],
+        description="The 8/9-note hybrid scale blending Major and Minor Pentatonic. Used by B.B. King, Clapton, SRV, and Duane Allman."
+    ),
+    "bebop_dominant": ScaleTemplate(
+        name="Dominant Bebop Scale",
+        category=ScaleCategory.MODE,
+        formula=[0, 2, 4, 5, 7, 9, 10, 11],
+        intervals=["1", "2", "3", "4", "5", "6", "b7", "7"],
+        character_notes=["b7", "7"],
+        description="8-note dominant bebop scale with chromatic passing tone between b7 and root. Ensures chord tones land on downbeats."
+    ),
+
+    # The Church Modes
     "dorian": ScaleTemplate(
         name="Dorian Mode",
         category=ScaleCategory.MODE,
@@ -208,6 +227,12 @@ ALIASES: Dict[str, str] = {
     "locrian_mode": "locrian",
     "jazz_minor": "melodic_minor",
     "minor_blues": "blues",
+    # Intermediate aliases
+    "hybrid_pentatonic": "hybrid_blues",
+    "major_minor_blues": "hybrid_blues",
+    "dominant_bebop": "bebop_dominant",
+    "bebop": "bebop_dominant",
+    "bebop_scale": "bebop_dominant",
 }
 
 
@@ -228,7 +253,6 @@ def get_scale(
         ValueError: If scale_type is not recognized or root is invalid.
     """
     clean_root = root.strip().capitalize()
-    # Validate root
     _ = note_to_pitch_class(clean_root)
     
     norm_type = normalize_scale_name(scale_type)
@@ -242,7 +266,7 @@ def get_scale(
     if len(tmpl.formula) == 7:
         spelled_notes = spell_diatonic_scale(clean_root, tmpl.formula, mode=mode)
     else:
-        # Pentatonic, blues, and other scales generate notes from interval definitions
+        # Non-7-note scales (pentatonics, blues, 8-note bebop, 8-note hybrid) generate notes via intervals
         spelled_notes = [get_note_at_interval(clean_root, interval, mode=mode) for interval in tmpl.intervals]
     
     scale_id = f"{clean_root.lower()}_{norm_type}"
@@ -264,20 +288,12 @@ def get_scale(
 
 
 def get_relative_minor(major_root: str) -> str:
-    """Returns the relative minor root note for a given major key (down 3 semitones).
-    
-    Example: 'C' -> 'A', 'G' -> 'E', 'F' -> 'D', 'Eb' -> 'C'
-    """
-    # 9 semitones up is the 6th degree (relative minor)
+    """Returns the relative minor root note for a given major key (down 3 semitones)."""
     return get_note_at_interval(major_root, "6", mode=NotationMode.PRACTICAL)
 
 
 def get_relative_major(minor_root: str) -> str:
-    """Returns the relative major root note for a given minor key (up 3 semitones).
-    
-    Example: 'A' -> 'C', 'E' -> 'G', 'D' -> 'F', 'C' -> 'Eb'
-    """
-    # 3 semitones up is the minor 3rd (relative major)
+    """Returns the relative major root note for a given minor key (up 3 semitones)."""
     return get_note_at_interval(minor_root, "b3", mode=NotationMode.PRACTICAL)
 
 
