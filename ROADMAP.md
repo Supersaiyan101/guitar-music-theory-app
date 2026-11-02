@@ -42,7 +42,7 @@
 
 - [x] **`TASK-1.1`**: Pitch Class Algebra & Enharmonic Resolution (Chroma $0-11$, circle of fifths, accidental spellings $\sharp$ vs $\flat$).
   * *Deliverable:* `backend/app/theory/pitch.py` + `backend/tests/test_pitch.py` (100% test pass).
-- [ ] **`TASK-1.2`**: Interval Engine (Semitone distance, compound intervals, inversion math).
+- [x] **`TASK-1.2`**: Interval Engine (Semitone distance, compound intervals, inversion math).
   * *Deliverable:* `backend/app/theory/intervals.py` + `backend/tests/test_intervals.py`.
 - [ ] **`TASK-1.3`**: Scale & Mode Generator (Major, Minor, Pentatonics, Blues, Modes, Phrygian Dominant).
   * *Deliverable:* `backend/app/theory/scales.py` + `backend/tests/test_scales.py`.
