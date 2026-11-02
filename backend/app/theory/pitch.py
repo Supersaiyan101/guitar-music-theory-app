@@ -5,9 +5,12 @@ Supports two notation modes:
   or double-sharps. F# Major ends on F.
 - NotationMode.ACADEMIC: Strict classical diatonic rule where every 7-note scale must have
   each letter (A through G) appear exactly once (e.g. F# Major ends on E#).
+
+Includes voice-leading minimal distance, enharmonic comparison, Circle of Fifths,
+and key signature accidentals tracking.
 """
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class NotationMode(str, Enum):
@@ -79,6 +82,29 @@ CIRCLE_OF_FIFTHS: Tuple[str, ...] = (
     "C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"
 )
 
+# Standard order of sharps and flats in key signatures
+ORDER_OF_SHARPS: Tuple[str, ...] = ("F#", "C#", "G#", "D#", "A#", "E#", "B#")
+ORDER_OF_FLATS: Tuple[str, ...] = ("Bb", "Eb", "Ab", "Db", "Gb", "Cb", "Fb")
+
+# Key signature accidental counts for major keys
+KEY_ACCIDENTALS_MAP: Dict[str, Tuple[int, str]] = {
+    "C": (0, "natural"),
+    "G": (1, "sharp"),
+    "D": (2, "sharp"),
+    "A": (3, "sharp"),
+    "E": (4, "sharp"),
+    "B": (5, "sharp"),
+    "F#": (6, "sharp"),
+    "C#": (7, "sharp"),
+    "F": (1, "flat"),
+    "Bb": (2, "flat"),
+    "Eb": (3, "flat"),
+    "Ab": (4, "flat"),
+    "Db": (5, "flat"),
+    "Gb": (6, "flat"),
+    "Cb": (7, "flat"),
+}
+
 
 def normalize_note_name(note: str) -> str:
     """Normalizes note string to proper capitalization and stripped whitespace.
@@ -93,11 +119,9 @@ def normalize_note_name(note: str) -> str:
     if not clean:
         raise ValueError("Empty note string")
     
-    # Capitalize the base letter, keep accidentals in lowercase (for 'b') or '#'
     letter = clean[0].upper()
     accidental = clean[1:]
     
-    # Standardize accidentals (e.g. 'B' -> 'b', '#' -> '#')
     norm_accidental = ""
     for ch in accidental:
         if ch in ("B", "b"):
@@ -131,11 +155,41 @@ def pitch_class_to_note(pc: int, prefer_flats: bool = False) -> str:
     return PITCH_CLASS_TO_FLAT[norm_pc] if prefer_flats else PITCH_CLASS_TO_SHARP[norm_pc]
 
 
+def are_enharmonic(note_a: str, note_b: str) -> bool:
+    """Returns True if note_a and note_b vibrate at the exact same physical pitch class.
+    
+    Examples:
+        are_enharmonic("C#", "Db")  -> True
+        are_enharmonic("E#", "F")   -> True
+        are_enharmonic("B#", "C")   -> True
+        are_enharmonic("C", "D")    -> False
+    """
+    return note_to_pitch_class(note_a) == note_to_pitch_class(note_b)
+
+
 def semitones_between(from_note: str, to_note: str) -> int:
     """Calculates ascending semitone interval from from_note to to_note (0-11)."""
     pc_from = note_to_pitch_class(from_note)
     pc_to = note_to_pitch_class(to_note)
     return (pc_to - pc_from) % 12
+
+
+def shortest_semitone_distance(from_note: str, to_note: str) -> int:
+    """Calculates the minimal fret/voice-leading distance between two notes (-6 to +6).
+    
+    Positive indicates shortest path is ascending (up frets).
+    Negative indicates shortest path is descending (down frets).
+    
+    Examples:
+        shortest_semitone_distance("C", "B") -> -1 (B is 1 fret down from C)
+        shortest_semitone_distance("B", "C") -> +1 (C is 1 fret up from B)
+        shortest_semitone_distance("A", "C") -> +3 (C is 3 frets up from A)
+        shortest_semitone_distance("E", "D") -> -2 (D is 2 frets down from E)
+    """
+    asc = semitones_between(from_note, to_note)
+    if asc > 6:
+        return asc - 12
+    return asc
 
 
 def parse_note(note: str) -> Tuple[str, str]:
@@ -258,15 +312,11 @@ def get_key_neighbors(key: str) -> Dict[str, str]:
         get_key_neighbors("E") -> {'I': 'E', 'IV': 'A', 'V': 'B'}
     """
     normalized = normalize_note_name(key)
-    # Convert enharmonic if needed to match circle representation
     norm_lookup = normalized
-    if norm_lookup == "F#":
-        norm_lookup = "F#"
-    elif norm_lookup == "Gb":
+    if norm_lookup == "Gb":
         norm_lookup = "F#"
         
     if norm_lookup not in CIRCLE_OF_FIFTHS:
-        # Fallback to pitch class match
         target_pc = note_to_pitch_class(normalized)
         norm_lookup = [k for k in CIRCLE_OF_FIFTHS if note_to_pitch_class(k) == target_pc][0]
         
@@ -278,4 +328,33 @@ def get_key_neighbors(key: str) -> Dict[str, str]:
         "I": CIRCLE_OF_FIFTHS[idx],
         "IV": CIRCLE_OF_FIFTHS[iv_idx],
         "V": CIRCLE_OF_FIFTHS[v_idx],
+    }
+
+
+def get_key_accidentals(key: str) -> Dict[str, Any]:
+    """Returns the key signature details: count, type ('sharp', 'flat', 'natural'),
+    and the ordered list of altered notes.
+    
+    Examples:
+        get_key_accidentals("C") -> {'count': 0, 'type': 'natural', 'accidentals': []}
+        get_key_accidentals("D") -> {'count': 2, 'type': 'sharp', 'accidentals': ['F#', 'C#']}
+        get_key_accidentals("Eb") -> {'count': 3, 'type': 'flat', 'accidentals': ['Bb', 'Eb', 'Ab']}
+    """
+    normalized = normalize_note_name(key)
+    if normalized not in KEY_ACCIDENTALS_MAP:
+        raise ValueError(f"Unknown key signature '{key}'")
+        
+    count, acc_type = KEY_ACCIDENTALS_MAP[normalized]
+    if acc_type == "sharp":
+        accidentals_list = list(ORDER_OF_SHARPS[:count])
+    elif acc_type == "flat":
+        accidentals_list = list(ORDER_OF_FLATS[:count])
+    else:
+        accidentals_list = []
+        
+    return {
+        "key": normalized,
+        "count": count,
+        "type": acc_type,
+        "accidentals": accidentals_list,
     }
