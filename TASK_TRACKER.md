@@ -15,6 +15,8 @@
 | 🟢 **COMPLETE** | **`TASK-1.3`** | **Scale & Mode Generator** | Hybrid Pentatonic Blues (B.B. King/SRV) & Dominant Bebop scales |
 | 🟢 **COMPLETE** | **`TASK-1.4`** | **Chord Formula & Inversion Parser** | Triad inversions, sequential arpeggios, Hendrix/Mayer embellishments, shell voicings |
 | 🟢 **COMPLETE** | **`TASK-1.5`** | **Fretboard Matrix & Soloing Boxes** | CAGED anchors & voicings, Diagonal Highway, B.B./Albert King boxes, 3NPS, Octave GPS |
+| 🟢 **COMPLETE** | **`TASK-2.1`** | **Next.js 14 App + Zustand Store + Studio Shell** | Reactive theory store, lefty/TAB view ergonomics, Tone.js SSR-safe bridge, studio controls |
+| 🟡 **NEXT** | **`TASK-2.2`** | **24-Fret SVG Fretboard Component** | Physics fret spacing, mother-of-pearl inlays, realistic string gauges |
 
 ---
 
@@ -86,5 +88,6 @@
 | **`TASK-1.3`** | Scale & Mode Generator | 2026-11-02 | 15/15 `pytest` | `backend/app/theory/scales.py` (Full Major/Minor, Modes, Hybrid Blues scale, Dominant Bebop, Relative keys) |
 | **`TASK-1.4`** | Chord Formula & Quality Parser | 2026-11-02 | 14/14 `pytest` | `backend/app/theory/chords.py` (Triad deconstruction, Hendrix 7#9, altered chords, 1st/2nd triad inversions, arpeggios, Hendrix/Mayer embellishments, shell voicings, superimposed triads, tritone substitutions, spread triads) |
 | **`TASK-1.5`** | 24-Fret Guitar Matrix & Soloing Boxes | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/fretboard.py` (Standard/Drop-D/Eb tunings, 24-fret matrix, CAGED root anchors & voicings, Diagonal Highway, B.B./Albert King boxes, 3NPS, Octave GPS, static voice-leading) |
-| **Total** | **Phase 1 Deterministic Engine** | | **71/71 Passing (100%)** | Complete mathematical, soloing, and physical guitar foundation |
+| **`TASK-2.1`** | Frontend App Router, Zustand Theory Store & Studio Shell | 2026-11-03 | Build Clean (0 err) | `frontend/` (Next.js 16/14 App Router, TypeScript, Tailwind CSS, `useTheoryStore.ts`, SSR-safe `soundEngine.ts`, studio controls: key, scale/chord, tuning, display mode, lefty/TAB view, note inspector HUD, color legend) |
+| **Total** | **Phase 1 Theory Engine + Task 2.1 Frontend Foundation** | | **71/71 Passing (100%) + Clean Next Build** | Complete deterministic engine & reactive studio state architecture |
 
