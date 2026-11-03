@@ -126,3 +126,4 @@ The deterministic backend engine is self-contained, typed with Pydantic (`backen
 - `GET /api/theory/fretboard/highway?root=A` $\rightarrow$ Returns the 15-note sliding pentatonic diagonal.
 - `GET /api/theory/fretboard/bb-box?root=A` $\rightarrow$ Returns B.B. King sweet spot & bend markers.
 - `GET /api/theory/fretboard/3nps?root=C&mode=ionian` $\rightarrow$ Returns 18-note 3NPS modal shapes.
+
