@@ -9,9 +9,8 @@ import { DisplayModeToggle } from '@/components/controls/DisplayModeToggle';
 import { FretboardSettings } from '@/components/controls/FretboardSettings';
 import { NoteInspector } from '@/components/inspector/NoteInspector';
 import { FooterLegend } from '@/components/layout/FooterLegend';
+import { Fretboard } from '@/components/fretboard/Fretboard';
 import { useTheoryStore } from '@/store/useTheoryStore';
-import { soundEngine } from '@/lib/audio/soundEngine';
-import { Volume2, Sparkles, SlidersHorizontal } from 'lucide-react';
 
 export default function Home() {
   const {
@@ -23,10 +22,6 @@ export default function Home() {
     activeOverlay,
     cagedShape,
     stringOrientation,
-    handedness,
-    fretRange,
-    playFretAudio,
-    setInspectedFret,
   } = useTheoryStore();
 
   return (
@@ -79,57 +74,9 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Canvas Placeholder & Quick Interactive Test Bench */}
-          <div className="py-12 px-6 flex flex-col items-center justify-center text-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-zinc-800 to-zinc-900 border border-zinc-700/80 flex items-center justify-center shadow-lg">
-              <SlidersHorizontal className="w-7 h-7 text-red-500" />
-            </div>
-
-            <div className="max-w-md">
-              <h3 className="text-base font-bold text-white mb-1 flex items-center justify-center gap-1.5">
-                <span>Task 2.1 Complete: Reactive Engine Online</span>
-                <Sparkles className="w-4 h-4 text-amber-400" />
-              </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                State store and audio bridge are wired. Test the WebAudio plucks below or change keys and scales above to watch the reactive context update. Ready for <strong>TASK-2.2 (SVG Fretboard Canvas)</strong>.
-              </p>
-            </div>
-
-            {/* Interactive Audio Pluck Test Bench */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-              {[
-                { note: 'E2', label: 'Low E (String 6)' },
-                { note: 'A2', label: 'A2 (Root 5th str)' },
-                { note: 'D3', label: 'D3' },
-                { note: 'G3', label: 'G3' },
-                { note: 'B3', label: 'B3' },
-                { note: 'E4', label: 'High E (String 1)' },
-                { note: 'A4', label: 'A4 (440 Hz)' },
-              ].map((sample) => (
-                <button
-                  key={sample.note}
-                  onClick={() => {
-                    playFretAudio(sample.note);
-                    setInspectedFret({
-                      coordinate: {
-                        stringNumber: 1,
-                        fretNumber: 5,
-                        note: sample.note.slice(0, -1) as any,
-                        octave: parseInt(sample.note.slice(-1)),
-                        pitchWithOctave: sample.note,
-                        frequency: 440,
-                        degree: '1',
-                      },
-                      roleInChordOrScale: 'Pluck Test',
-                    });
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700 text-xs font-semibold transition-all shadow-sm"
-                >
-                  <Volume2 className="w-3.5 h-3.5 text-red-400" />
-                  {sample.label}
-                </button>
-              ))}
-            </div>
+          {/* 24-Fret Parallel SVG Fretboard Component */}
+          <div className="pt-2">
+            <Fretboard />
           </div>
         </section>
 
