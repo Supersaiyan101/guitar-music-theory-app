@@ -19,7 +19,8 @@
 | 🟢 **COMPLETE** | **`TASK-2.2`** | **Parallel 24-Fret SVG Fretboard Component** | Physics scale ($L=2200$px, min width $\ge 32$px), crowned nickel wires, top binding side dots, full-cell hitboxes, dynamic viewBox zoom |
 | 🟢 **COMPLETE** | **`TASK-2.3`** | **Interactive Note Pins & Scale/Degree Color Engine** | Color coding harmonic functions (Root Crimson, 3rd Blue, 5th Gold, 7th Purple, b5 Orange), scale/chord filtering, Target Chord Tones mode, Ghost notes |
 | 🟢 **COMPLETE** | **`TASK-2.4`** | **Visual Soloing Overlays** | Bounding zones & connectors for CAGED (5 shapes + roots), 3NPS (7 modes), Diagonal Highway, B.B./Albert King boxes, Triads |
-| 🟡 **NEXT** | **`TASK-2.5`** | **Tone.js WebAudio Pluck & Arpeggiator Engine** | Interactive scale/arpeggio playback, animated playhead cursor, polyphonic chord strum |
+| 🟢 **COMPLETE** | **`TASK-2.5`** | **Tone.js WebAudio Pluck & Arpeggiator Engine** | Interactive scale/arpeggio playback, animated dancing playhead cursor, modal tonic drone pad, natural pick-sweep strum |
+| 🟡 **NEXT** | **`TASK-3.1`** | **Progression Engine & Harmonic Function Parser** | Roman numeral analysis ($I - IV - V$, $ii - V - I$), secondary dominants, modal interchange |
 
 ---
 
@@ -95,5 +96,6 @@
 | **`TASK-2.2`** | Parallel 24-Fret SVG Fretboard Component | 2026-11-03 | Build Clean (0 err) | `frontend/src/components/fretboard/Fretboard.tsx` (Physics scale $L=2200$px with min width $\ge 32$px, crowned nickel wires, top binding side dots, bone nut string notches, full-cell hover hitboxes, dynamic SVG viewBox zoom, headstock tuning badges) |
 | **`TASK-2.3`** | Interactive Note Pins & Scale/Degree Color Engine | 2026-11-03 | Build Clean (0 err) | `frontend/src/components/fretboard/Fretboard.tsx`, `DisplayModeToggle.tsx` (Harmonic degree colors: Root Crimson, 3rd Blue, 5th Gold, Blue Note Orange, 7th Purple, Extensions Emerald; real-time scale/chord filtering; Target Chord Tones soloing spotlight; Isolated vs Ghost vs Full density modes; Note vs Degree toggle) |
 | **`TASK-2.4`** | Visual Soloing Overlays | 2026-11-03 | Build Clean (0 err) | `frontend/src/components/fretboard/Fretboard.tsx`, `OverlayControls.tsx`, `overlayMath.ts` (CAGED 5 shapes + root anchors + All 5 Interlocking mode; Diagonal Highway with slide vectors on 5-3-1; B.B. King Box with Major 6th bend and Major 3rd slip; Albert King Box with 1.5-step cry overbend; 3NPS 7 modal zones; Movable Triads on 123/234/345; Box Focus auto-zoom) |
-| **Total** | **Phase 1 Theory Engine + Tasks 2.1 - 2.4** | | **71/71 Passing (100%) + Clean Next Build** | Complete deterministic engine & visual soloing roadmaps across 24 frets |
+| **`TASK-2.5`** | Tone.js WebAudio Pluck & Arpeggiator Engine | 2026-11-03 | Build Clean (0 err) | `frontend/src/lib/audio/soundEngine.ts`, `PlaybackBar.tsx` (Scale and arpeggio sequence runner with synchronized dancing SVG playhead cursor, continuous modal tonic drone pad, natural 35ms pick-sweep strum, electric/acoustic presets) |
+| **Total** | **Phase 1 & Phase 2 (Theory Core + Interactive Studio)** | | **71/71 Passing (100%) + Clean Next Build** | Complete deterministic theory engine, 24-fret SVG instrument, visual soloing overlays, and ear-training WebAudio engine |
 
