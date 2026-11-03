@@ -4,6 +4,7 @@ import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { KeySelector } from '@/components/controls/KeySelector';
 import { ScaleChordPicker } from '@/components/controls/ScaleChordPicker';
+import { OverlayControls } from '@/components/controls/OverlayControls';
 import { TuningSelector } from '@/components/controls/TuningSelector';
 import { DisplayModeToggle } from '@/components/controls/DisplayModeToggle';
 import { FretboardSettings } from '@/components/controls/FretboardSettings';
@@ -35,6 +36,7 @@ export default function Home() {
         <section className="flex flex-col gap-3.5 bg-zinc-950/60 border border-zinc-800/80 p-4 sm:p-5 rounded-2xl shadow-xl shadow-black/50">
           <KeySelector />
           <ScaleChordPicker />
+          <OverlayControls />
           <TuningSelector />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
             <DisplayModeToggle />

@@ -9,8 +9,17 @@ import {
   noteToPitchClass,
   TUNINGS,
 } from '@/lib/theory/pitchMath';
+import {
+  getCagedOverlays,
+  getDiagonalHighway,
+  getBbKingBox,
+  getAlbertKingBox,
+  getThreeNpsShape,
+  getMovableTriadInversions,
+  CAGED_COLORS,
+} from '@/lib/theory/overlayMath';
 import { getDegreeColor } from '@/lib/theory/colorMap';
-import { FretCoordinate, NoteName } from '@/types/theory';
+import { FretCoordinate, NoteName, CagedShape } from '@/types/theory';
 
 // Inlay dot fret numbers
 const SINGLE_DOT_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
@@ -28,6 +37,9 @@ export const Fretboard: React.FC = () => {
     accidentalMode,
     activeOverlay,
     cagedShape,
+    cagedShowAll,
+    threeNpsShape,
+    triadStringSet,
     stringOrientation,
     handedness,
     fretRange,
@@ -75,8 +87,6 @@ export const Fretboard: React.FC = () => {
   }, [fretXPositions, OPEN_STRING_X]);
 
   // Y coordinate of each string 1..6
-  // TAB view: String 1 (High E) is on top, String 6 (Low E) on bottom
-  // Player view: String 6 (Low E) on top, String 1 (High E) on bottom
   const stringYPositions = useMemo(() => {
     const yMap: Record<number, number> = {};
     for (let str = 1; str <= 6; str++) {
@@ -94,12 +104,12 @@ export const Fretboard: React.FC = () => {
     number,
     { width: number; color: string; dashArray?: string; shadowWidth: number }
   > = {
-    6: { width: 3.8, color: '#94a3b8', dashArray: '2, 1', shadowWidth: 4.2 }, // Low E wound
-    5: { width: 3.0, color: '#94a3b8', dashArray: '2, 1', shadowWidth: 3.5 }, // A wound
-    4: { width: 2.3, color: '#a1a1aa', dashArray: '2, 1', shadowWidth: 2.8 }, // D wound
-    3: { width: 1.8, color: '#cbd5e1', shadowWidth: 2.2 },                   // G plain steel
-    2: { width: 1.4, color: '#e2e8f0', shadowWidth: 1.8 },                   // B plain steel
-    1: { width: 1.0, color: '#f8fafc', shadowWidth: 1.4 },                   // High E plain steel
+    6: { width: 3.8, color: '#94a3b8', dashArray: '2, 1', shadowWidth: 4.2 },
+    5: { width: 3.0, color: '#94a3b8', dashArray: '2, 1', shadowWidth: 3.5 },
+    4: { width: 2.3, color: '#a1a1aa', dashArray: '2, 1', shadowWidth: 2.8 },
+    3: { width: 1.8, color: '#cbd5e1', shadowWidth: 2.2 },
+    2: { width: 1.4, color: '#e2e8f0', shadowWidth: 1.8 },
+    1: { width: 1.0, color: '#f8fafc', shadowWidth: 1.4 },
   };
 
   // Generate complete 6 x 25 matrix
@@ -112,7 +122,15 @@ export const Fretboard: React.FC = () => {
     return getHarmonicProfile(currentKey, activeScale, activeChord, accidentalMode);
   }, [currentKey, activeScale, activeChord, accidentalMode]);
 
-  // Dynamic SVG viewBox computation based on fretRange
+  // Precompute Overlay Data
+  const cagedData = useMemo(() => getCagedOverlays(currentKey), [currentKey]);
+  const highwayData = useMemo(() => getDiagonalHighway(currentKey), [currentKey]);
+  const bbData = useMemo(() => getBbKingBox(currentKey), [currentKey]);
+  const albertData = useMemo(() => getAlbertKingBox(currentKey), [currentKey]);
+  const threeNpsData = useMemo(() => getThreeNpsShape(currentKey, threeNpsShape), [currentKey, threeNpsShape]);
+  const triadData = useMemo(() => getMovableTriadInversions(currentKey, triadStringSet), [currentKey, triadStringSet]);
+
+  // Dynamic SVG viewBox computation based on fretRange and active overlay
   const viewBoxString = useMemo(() => {
     if (fretRange === 'open_to_12') {
       const width = fretXPositions[12] + 40;
@@ -124,16 +142,43 @@ export const Fretboard: React.FC = () => {
       return `${minX} 0 ${width} ${totalSvgHeight}`;
     }
     if (fretRange === 'box_focus') {
-      // Focus on active 5-fret span (frets 4 to 10)
-      const minFret = 4;
-      const maxFret = 10;
+      let span: [number, number] = [4, 10];
+      if (activeOverlay === 'caged' && cagedData[cagedShape]) {
+        span = cagedData[cagedShape].fretSpan;
+      } else if (activeOverlay === 'three_nps') {
+        span = threeNpsData.fretSpan;
+      } else if (activeOverlay === 'bb_king_box') {
+        span = bbData.fretSpan;
+      } else if (activeOverlay === 'albert_king_box') {
+        span = albertData.fretSpan;
+      } else if (activeOverlay === 'diagonal_highway') {
+        span = highwayData.fretSpan;
+      } else if (activeOverlay === 'triads' && triadData[0]) {
+        span = triadData[0].fretSpan;
+      }
+
+      const minFret = Math.max(1, span[0]);
+      const maxFret = Math.min(24, span[1]);
       const minX = Math.max(0, fretXPositions[minFret - 1] - 30);
-      const width = fretXPositions[maxFret] - minX + 30;
-      return `${minX} 0 ${width} ${totalSvgHeight}`;
+      const width = Math.min(totalSvgWidth - minX, fretXPositions[maxFret] - minX + 40);
+      return `${minX} 0 ${Math.max(350, width)} ${totalSvgHeight}`;
     }
     // Full 24-fret view
     return `0 0 ${totalSvgWidth} ${totalSvgHeight}`;
-  }, [fretRange, fretXPositions, totalSvgWidth, totalSvgHeight]);
+  }, [
+    fretRange,
+    fretXPositions,
+    totalSvgWidth,
+    totalSvgHeight,
+    activeOverlay,
+    cagedData,
+    cagedShape,
+    threeNpsData,
+    bbData,
+    albertData,
+    highwayData,
+    triadData,
+  ]);
 
   const handleCellClick = (coord: FretCoordinate) => {
     const pc = noteToPitchClass(coord.note);
@@ -206,7 +251,7 @@ export const Fretboard: React.FC = () => {
                 <stop offset="100%" stopColor="#475569" />
               </linearGradient>
 
-              {/* Bone Nut (Tusq/Bone with slight bevel) */}
+              {/* Bone Nut */}
               <linearGradient id="boneNutGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="#faf7f2" />
                 <stop offset="40%" stopColor="#eee8d5" />
@@ -214,7 +259,7 @@ export const Fretboard: React.FC = () => {
                 <stop offset="100%" stopColor="#c5baa0" />
               </linearGradient>
 
-              {/* Mother of Pearl Inlays with Subtle Iridescent Rim */}
+              {/* Mother of Pearl Inlays */}
               <radialGradient id="pearlInlayGrad" cx="45%" cy="45%" r="55%">
                 <stop offset="0%" stopColor="#ffffff" />
                 <stop offset="60%" stopColor="#f1f5f9" />
@@ -227,6 +272,30 @@ export const Fretboard: React.FC = () => {
                 <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
                 <stop offset="100%" stopColor="#ffffff" stopOpacity="0.04" />
               </linearGradient>
+
+              {/* Arrow Marker for Diagonal Highway & Bends */}
+              <marker
+                id="slideArrow"
+                viewBox="0 0 10 10"
+                refX="7"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
+              </marker>
+              <marker
+                id="bendArrow"
+                viewBox="0 0 10 10"
+                refX="7"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+              </marker>
             </defs>
 
             {/* 1. Headstock / Open String Zone Background */}
@@ -251,7 +320,7 @@ export const Fretboard: React.FC = () => {
               strokeWidth="1"
             />
 
-            {/* 3. Top Neck Binding Strip (with Luthier Ivory Finish) */}
+            {/* 3. Top Neck Binding Strip */}
             <rect
               x={NUT_X}
               y={NECK_Y - BINDING_HEIGHT}
@@ -262,7 +331,7 @@ export const Fretboard: React.FC = () => {
               strokeWidth="0.5"
             />
 
-            {/* 4. Side Dots along the Top Binding (Authentic Player View) */}
+            {/* 4. Side Dots along the Top Binding */}
             {SINGLE_DOT_FRETS.map((fret) => {
               const cx = fretCenterPositions[fret];
               const cy = NECK_Y - BINDING_HEIGHT / 2;
@@ -288,7 +357,7 @@ export const Fretboard: React.FC = () => {
               );
             })}
 
-            {/* 5. Center Mother-of-Pearl Inlays (Position Dots) */}
+            {/* 5. Center Mother-of-Pearl Inlays */}
             {SINGLE_DOT_FRETS.map((fret) => {
               const cx = fretCenterPositions[fret];
               const cy = NECK_Y + NECK_HEIGHT / 2;
@@ -335,7 +404,7 @@ export const Fretboard: React.FC = () => {
               );
             })}
 
-            {/* 6. Crowned Nickel-Silver Fret Wires (Frets 1 to 24) */}
+            {/* 6. Crowned Nickel-Silver Fret Wires */}
             {fretXPositions.slice(1).map((x, idx) => {
               const fretNum = idx + 1;
               const isOctaveFret = fretNum === 12 || fretNum === 24;
@@ -343,7 +412,6 @@ export const Fretboard: React.FC = () => {
 
               return (
                 <g key={`fretwire-${fretNum}`}>
-                  {/* Fret wire left shadow */}
                   <line
                     x1={x - wireWidth / 2}
                     y1={NECK_Y}
@@ -353,7 +421,6 @@ export const Fretboard: React.FC = () => {
                     strokeWidth="0.8"
                     opacity={0.45}
                   />
-                  {/* Fret wire crowned highlight */}
                   <line
                     x1={x}
                     y1={NECK_Y}
@@ -362,7 +429,6 @@ export const Fretboard: React.FC = () => {
                     stroke="url(#fretWireCrown)"
                     strokeWidth={wireWidth}
                   />
-                  {/* Fret wire right soft shadow */}
                   <line
                     x1={x + wireWidth / 2 + 0.5}
                     y1={NECK_Y}
@@ -376,7 +442,7 @@ export const Fretboard: React.FC = () => {
               );
             })}
 
-            {/* 7. Bone Nut (Fret 0) with Notches */}
+            {/* 7. Bone Nut with Notches */}
             <rect
               x={NUT_X - NUT_WIDTH}
               y={NECK_Y - 2}
@@ -387,7 +453,6 @@ export const Fretboard: React.FC = () => {
               stroke="#b5a990"
               strokeWidth="0.8"
             />
-            {/* String notches through the bone nut */}
             {[1, 2, 3, 4, 5, 6].map((strNum) => {
               const y = stringYPositions[strNum];
               return (
@@ -403,7 +468,348 @@ export const Fretboard: React.FC = () => {
               );
             })}
 
-            {/* 8. Full-Cell Interactive Hitboxes & Hover Highlights */}
+            {/* ========================================================================= */}
+            {/* 8. VISUAL SOLOING OVERLAYS (TASK-2.4)                                     */}
+            {/* ========================================================================= */}
+
+            {/* 8A. CAGED OVERLAYS */}
+            {activeOverlay === 'caged' && (
+              <g className="caged-overlays">
+                {(cagedShowAll
+                  ? (['C', 'A', 'G', 'E', 'D'] as CagedShape[])
+                  : [cagedShape]
+                ).map((s) => {
+                  const data = cagedData[s];
+                  if (!data) return null;
+                  const [minF, maxF] = data.fretSpan;
+                  const x1 = minF === 0 ? NUT_X : fretXPositions[minF - 1];
+                  const x2 = fretXPositions[Math.min(24, maxF)];
+                  const width = x2 - x1;
+                  const cfg = CAGED_COLORS[s];
+
+                  return (
+                    <g key={`caged-zone-${s}`}>
+                      {/* Translucent Bounding Hull */}
+                      <rect
+                        x={x1}
+                        y={NECK_Y + 2}
+                        width={width}
+                        height={NECK_HEIGHT - 4}
+                        rx={8}
+                        fill={cfg.fill}
+                        stroke={cfg.stroke}
+                        strokeWidth={cagedShowAll ? 1.5 : 2.5}
+                        strokeDasharray={cagedShowAll ? '4, 2' : undefined}
+                        className="transition-all"
+                      />
+                      {/* Shape Header Badge */}
+                      <rect
+                        x={x1 + 6}
+                        y={NECK_Y + 6}
+                        width={52}
+                        height={18}
+                        rx={4}
+                        fill="#09090b"
+                        stroke={cfg.stroke}
+                        strokeWidth={1}
+                        opacity={0.9}
+                      />
+                      <text
+                        x={x1 + 32}
+                        y={NECK_Y + 19}
+                        textAnchor="middle"
+                        className="text-[9.5px] font-black fill-white pointer-events-none"
+                      >
+                        Shape {s}
+                      </text>
+
+                      {/* Connectors between Root Anchors */}
+                      {data.rootCoordinates.length > 1 && (
+                        <line
+                          x1={fretCenterPositions[data.rootCoordinates[0].fretNumber]}
+                          y1={stringYPositions[data.rootCoordinates[0].stringNumber]}
+                          x2={fretCenterPositions[data.rootCoordinates[1].fretNumber]}
+                          y2={stringYPositions[data.rootCoordinates[1].stringNumber]}
+                          stroke={cfg.stroke}
+                          strokeWidth={2}
+                          strokeDasharray="4, 3"
+                          opacity={0.85}
+                        />
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
+            {/* 8B. 3-NOTES-PER-STRING MODAL OVERLAY */}
+            {activeOverlay === 'three_nps' && (
+              <g className="3nps-overlay">
+                {(() => {
+                  const [minF, maxF] = threeNpsData.fretSpan;
+                  const x1 = minF === 0 ? NUT_X : fretXPositions[minF - 1];
+                  const x2 = fretXPositions[Math.min(24, maxF)];
+                  const width = x2 - x1;
+
+                  return (
+                    <g>
+                      <rect
+                        x={x1}
+                        y={NECK_Y + 2}
+                        width={width}
+                        height={NECK_HEIGHT - 4}
+                        rx={8}
+                        fill="rgba(168, 85, 247, 0.12)"
+                        stroke="#a855f7"
+                        strokeWidth={2.5}
+                      />
+                      <rect
+                        x={x1 + 6}
+                        y={NECK_Y + 6}
+                        width={130}
+                        height={18}
+                        rx={4}
+                        fill="#09090b"
+                        stroke="#a855f7"
+                        strokeWidth={1}
+                        opacity={0.95}
+                      />
+                      <text
+                        x={x1 + 71}
+                        y={NECK_Y + 19}
+                        textAnchor="middle"
+                        className="text-[9.5px] font-black fill-purple-300 pointer-events-none"
+                      >
+                        {threeNpsData.modeName} (3NPS)
+                      </text>
+                    </g>
+                  );
+                })()}
+              </g>
+            )}
+
+            {/* 8C. THE DIAGONAL PENTATONIC HIGHWAY */}
+            {activeOverlay === 'diagonal_highway' && (
+              <g className="highway-overlay">
+                {/* Connecting Polyline through all Highway notes */}
+                <polyline
+                  points={highwayData.notes
+                    .map((n) => `${fretCenterPositions[n.fretNumber]},${stringYPositions[n.stringNumber]}`)
+                    .join(' ')}
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="4, 2"
+                  opacity={0.65}
+                />
+
+                {/* Directional Slide Vectors on Strings 5, 3, 1 */}
+                {highwayData.slides.map((s, idx) => {
+                  const xFrom = fretCenterPositions[s.fromFret];
+                  const xTo = fretCenterPositions[s.toFret];
+                  const y = stringYPositions[s.stringNumber] - 7;
+
+                  return (
+                    <g key={`slide-vector-${idx}`}>
+                      <line
+                        x1={xFrom + 8}
+                        y1={y}
+                        x2={xTo - 8}
+                        y2={y}
+                        stroke="#10b981"
+                        strokeWidth={2.5}
+                        markerEnd="url(#slideArrow)"
+                      />
+                      <text
+                        x={(xFrom + xTo) / 2}
+                        y={y - 4}
+                        textAnchor="middle"
+                        className="text-[8.5px] font-black fill-emerald-300 pointer-events-none"
+                      >
+                        SLIDE
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
+            {/* 8D. B.B. KING BOX */}
+            {activeOverlay === 'bb_king_box' && (
+              <g className="bb-box-overlay">
+                {(() => {
+                  const [minF, maxF] = bbData.fretSpan;
+                  const x1 = fretXPositions[Math.max(0, minF - 1)];
+                  const x2 = fretXPositions[Math.min(24, maxF)];
+                  const y1 = stringYPositions[1] - STRING_SPACING * 0.4;
+                  const height = stringYPositions[3] - y1 + STRING_SPACING * 0.4;
+
+                  return (
+                    <g>
+                      <rect
+                        x={x1}
+                        y={y1}
+                        width={x2 - x1}
+                        height={height}
+                        rx={8}
+                        fill="rgba(239, 68, 68, 0.12)"
+                        stroke="#ef4444"
+                        strokeWidth={2}
+                      />
+                      {/* B.B. King Box Badge */}
+                      <rect
+                        x={x1 + 6}
+                        y={y1 + 4}
+                        width={85}
+                        height={16}
+                        rx={3}
+                        fill="#09090b"
+                        stroke="#ef4444"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={x1 + 48}
+                        y={y1 + 16}
+                        textAnchor="middle"
+                        className="text-[9px] font-black fill-red-300 pointer-events-none"
+                      >
+                        B.B. King Box
+                      </text>
+
+                      {/* Signature Major 6th Bend Indicator */}
+                      {bbData.bendNotes.map((bn, i) => {
+                        const bx = fretCenterPositions[bn.fretNumber];
+                        const by = stringYPositions[bn.stringNumber];
+                        return (
+                          <g key={`bb-bend-${i}`}>
+                            <path
+                              d={`M ${bx} ${by - 12} Q ${bx + 8} ${by - 24} ${bx + 18} ${by - 20}`}
+                              fill="none"
+                              stroke="#f59e0b"
+                              strokeWidth={2}
+                              markerEnd="url(#bendArrow)"
+                            />
+                            <text
+                              x={bx + 20}
+                              y={by - 24}
+                              className="text-[8px] font-black fill-amber-300 pointer-events-none"
+                            >
+                              FULL BEND
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })()}
+              </g>
+            )}
+
+            {/* 8E. ALBERT KING BOX */}
+            {activeOverlay === 'albert_king_box' && (
+              <g className="albert-box-overlay">
+                {(() => {
+                  const [minF, maxF] = albertData.fretSpan;
+                  const x1 = fretXPositions[Math.max(0, minF - 1)];
+                  const x2 = fretXPositions[Math.min(24, maxF)];
+                  const y1 = stringYPositions[1] - STRING_SPACING * 0.4;
+                  const height = stringYPositions[3] - y1 + STRING_SPACING * 0.4;
+
+                  const cx = fretCenterPositions[albertData.cryBendNote.fretNumber];
+                  const cy = stringYPositions[albertData.cryBendNote.stringNumber];
+
+                  return (
+                    <g>
+                      <rect
+                        x={x1}
+                        y={y1}
+                        width={x2 - x1}
+                        height={height}
+                        rx={8}
+                        fill="rgba(249, 115, 22, 0.12)"
+                        stroke="#f97316"
+                        strokeWidth={2}
+                      />
+                      <rect
+                        x={x1 + 6}
+                        y={y1 + 4}
+                        width={95}
+                        height={16}
+                        rx={3}
+                        fill="#09090b"
+                        stroke="#f97316"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={x1 + 53}
+                        y={y1 + 16}
+                        textAnchor="middle"
+                        className="text-[9px] font-black fill-orange-300 pointer-events-none"
+                      >
+                        Albert King Box
+                      </text>
+
+                      {/* 1.5-Step Cry Bend Indicator */}
+                      <path
+                        d={`M ${cx} ${cy - 12} Q ${cx + 10} ${cy - 28} ${cx + 22} ${cy - 24}`}
+                        fill="none"
+                        stroke="#f97316"
+                        strokeWidth={2.5}
+                        markerEnd="url(#bendArrow)"
+                      />
+                      <text
+                        x={cx + 24}
+                        y={cy - 28}
+                        className="text-[8.5px] font-black fill-orange-300 pointer-events-none"
+                      >
+                        1.5-STEP CRY BEND
+                      </text>
+                    </g>
+                  );
+                })()}
+              </g>
+            )}
+
+            {/* 8F. MOVABLE TRIADS */}
+            {activeOverlay === 'triads' && (
+              <g className="triad-overlays">
+                {triadData.map((t, idx) => {
+                  const [minF, maxF] = t.fretSpan;
+                  const x1 = fretXPositions[Math.max(0, minF - 1)];
+                  const x2 = fretXPositions[Math.min(24, maxF)];
+                  const strings = t.notes.map((n) => n.stringNumber);
+                  const minStr = Math.min(...strings);
+                  const maxStr = Math.max(...strings);
+                  const y1 = stringYPositions[minStr] - STRING_SPACING * 0.4;
+                  const height = stringYPositions[maxStr] - y1 + STRING_SPACING * 0.4;
+
+                  return (
+                    <g key={`triad-shape-${idx}`}>
+                      <rect
+                        x={x1}
+                        y={y1}
+                        width={x2 - x1}
+                        height={height}
+                        rx={6}
+                        fill="rgba(245, 158, 11, 0.12)"
+                        stroke="#f59e0b"
+                        strokeWidth={1.8}
+                        strokeDasharray="3, 2"
+                      />
+                      <text
+                        x={x1 + 6}
+                        y={y1 + 12}
+                        className="text-[8px] font-black fill-amber-300 pointer-events-none"
+                      >
+                        {t.inversion}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
+            {/* 9. Full-Cell Interactive Hitboxes & Hover Highlights */}
             {matrix.map((stringFrets, strIdx) => {
               const strNum = strIdx + 1;
               const y = stringYPositions[strNum];
@@ -436,14 +842,13 @@ export const Fretboard: React.FC = () => {
               });
             })}
 
-            {/* 9. Strings with Gauges, Shadows & Textures */}
+            {/* 10. Strings with Gauges, Shadows & Textures */}
             {[1, 2, 3, 4, 5, 6].map((strNum) => {
               const y = stringYPositions[strNum];
               const style = stringStyles[strNum];
 
               return (
                 <g key={`guitar-string-${strNum}`}>
-                  {/* Dynamic String Drop-Shadow */}
                   <line
                     x1={0}
                     y1={y + 1.8}
@@ -453,7 +858,6 @@ export const Fretboard: React.FC = () => {
                     strokeWidth={style.shadowWidth}
                     opacity={0.42}
                   />
-                  {/* Wound / Plain Steel String Body */}
                   <line
                     x1={0}
                     y1={y}
@@ -464,7 +868,6 @@ export const Fretboard: React.FC = () => {
                     strokeDasharray={style.dashArray}
                     strokeLinecap="round"
                   />
-                  {/* Specular Sheen Stripe on Plain Strings */}
                   {!style.dashArray && (
                     <line
                       x1={0}
@@ -480,7 +883,7 @@ export const Fretboard: React.FC = () => {
               );
             })}
 
-            {/* 10. Headstock Open-String Badges (Fret 0) */}
+            {/* 11. Headstock Open-String Badges (Fret 0) */}
             {[1, 2, 3, 4, 5, 6].map((strNum) => {
               const y = stringYPositions[strNum];
               const openPitch = tuningObj.strings[strNum - 1] || 'E2';
@@ -532,22 +935,21 @@ export const Fretboard: React.FC = () => {
               );
             })}
 
-            {/* 11. Dynamic Harmonic Note Pins across Strings and Frets 1 to 24 */}
+            {/* 12. Dynamic Harmonic Note Pins across Strings and Frets 1 to 24 */}
             {matrix.map((stringFrets, strIdx) => {
               const strNum = strIdx + 1;
               const y = stringYPositions[strNum];
 
               return stringFrets.map((coord) => {
-                if (coord.fretNumber === 0) return null; // Fret 0 handled by open badge
+                if (coord.fretNumber === 0) return null;
                 const x = fretCenterPositions[coord.fretNumber];
 
                 const pc = noteToPitchClass(coord.note);
                 const harmonicInfo = harmonicProfile.get(pc);
                 const isInScale = !!harmonicInfo;
 
-                // Handle density modes
                 if (!isInScale && densityMode === 'isolated') {
-                  return null; // Clean uncluttered view
+                  return null;
                 }
 
                 const isRoot = harmonicInfo?.isRoot || coord.note === currentKey;
@@ -559,7 +961,6 @@ export const Fretboard: React.FC = () => {
                 const isOctaveHighlighted =
                   highlightedOctaveNote && coord.note === highlightedOctaveNote;
 
-                // If ghost mode and not in scale:
                 if (!isInScale && densityMode === 'ghost') {
                   return (
                     <g
@@ -591,7 +992,6 @@ export const Fretboard: React.FC = () => {
                   );
                 }
 
-                // If all notes mode and not in scale:
                 if (!isInScale && densityMode === 'all') {
                   return (
                     <g
@@ -622,10 +1022,7 @@ export const Fretboard: React.FC = () => {
                   );
                 }
 
-                // Note IS in scale / chord!
                 const degreeConfig = getDegreeColor(harmonicInfo?.degree);
-
-                // Soloing Target Mode: dim passing tones if highlightChordTones is on
                 const isDimmedPassingTone = highlightChordTones && !isChordTone;
 
                 return (
@@ -634,7 +1031,6 @@ export const Fretboard: React.FC = () => {
                     onClick={() => handleCellClick(coord)}
                     className="cursor-pointer group"
                   >
-                    {/* Animated Pulse for Playback or Octave GPS */}
                     {(isPlaying || isOctaveHighlighted) && (
                       <circle
                         cx={x}
@@ -646,7 +1042,6 @@ export const Fretboard: React.FC = () => {
                       />
                     )}
 
-                    {/* Blue Note Special Pulse Ring */}
                     {harmonicInfo?.degree === 'b5' && (
                       <circle
                         cx={x}
@@ -661,7 +1056,6 @@ export const Fretboard: React.FC = () => {
                       />
                     )}
 
-                    {/* Note Pin Circle */}
                     <circle
                       cx={x}
                       cy={y}
@@ -679,7 +1073,6 @@ export const Fretboard: React.FC = () => {
                       className="transition-all duration-150 group-hover:r-[13px] group-hover:stroke-white shadow-lg"
                     />
 
-                    {/* Note Name or Degree Label */}
                     <text
                       x={x}
                       y={y + 3.5}
@@ -701,7 +1094,7 @@ export const Fretboard: React.FC = () => {
               });
             })}
 
-            {/* 12. Fret Numbers (Bottom Labeling) */}
+            {/* 13. Fret Numbers */}
             {fretXPositions.map((_, fretNum) => {
               if (fretNum === 0) return null;
               const isMarked =

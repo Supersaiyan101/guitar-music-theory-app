@@ -135,6 +135,8 @@ export interface ChordDefinition {
 }
 
 export type CagedShape = 'C' | 'A' | 'G' | 'E' | 'D';
+export type ThreeNpsShape = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type TriadStringSet = '123' | '234' | '345';
 
 export type SoloOverlay =
   | 'none'

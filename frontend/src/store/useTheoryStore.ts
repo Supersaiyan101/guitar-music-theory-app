@@ -9,6 +9,8 @@ import {
   AccidentalMode,
   SoloOverlay,
   CagedShape,
+  ThreeNpsShape,
+  TriadStringSet,
   StringOrientation,
   Handedness,
   FretRange,
@@ -30,6 +32,9 @@ export interface TheoryState {
   accidentalMode: AccidentalMode;
   activeOverlay: SoloOverlay;
   cagedShape: CagedShape;
+  cagedShowAll: boolean;
+  threeNpsShape: ThreeNpsShape;
+  triadStringSet: TriadStringSet;
   stringOrientation: StringOrientation;
   handedness: Handedness;
   fretRange: FretRange;
@@ -56,6 +61,9 @@ export interface TheoryState {
   setAccidentalMode: (mode: AccidentalMode) => void;
   setOverlay: (overlay: SoloOverlay) => void;
   setCagedShape: (shape: CagedShape) => void;
+  setCagedShowAll: (showAll: boolean) => void;
+  setThreeNpsShape: (shape: ThreeNpsShape) => void;
+  setTriadStringSet: (set: TriadStringSet) => void;
   setStringOrientation: (orientation: StringOrientation) => void;
   setHandedness: (handedness: Handedness) => void;
   setFretRange: (range: FretRange) => void;
@@ -81,6 +89,9 @@ const DEFAULT_STATE = {
   accidentalMode: 'auto' as AccidentalMode,
   activeOverlay: 'none' as SoloOverlay,
   cagedShape: 'A' as CagedShape,
+  cagedShowAll: false,
+  threeNpsShape: 1 as ThreeNpsShape,
+  triadStringSet: '123' as TriadStringSet,
   stringOrientation: 'tab' as StringOrientation,
   handedness: 'right' as Handedness,
   fretRange: 'full' as FretRange,
@@ -127,6 +138,12 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
   setOverlay: (overlay: SoloOverlay) => set({ activeOverlay: overlay }),
 
   setCagedShape: (shape: CagedShape) => set({ cagedShape: shape }),
+
+  setCagedShowAll: (showAll: boolean) => set({ cagedShowAll: showAll }),
+
+  setThreeNpsShape: (shape: ThreeNpsShape) => set({ threeNpsShape: shape }),
+
+  setTriadStringSet: (setGroup: TriadStringSet) => set({ triadStringSet: setGroup }),
 
   setStringOrientation: (orientation: StringOrientation) =>
     set({ stringOrientation: orientation }),
