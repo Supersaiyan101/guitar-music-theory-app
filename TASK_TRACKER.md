@@ -17,7 +17,8 @@
 | 🟢 **COMPLETE** | **`TASK-1.5`** | **Fretboard Matrix & Soloing Boxes** | CAGED anchors & voicings, Diagonal Highway, B.B./Albert King boxes, 3NPS, Octave GPS |
 | 🟢 **COMPLETE** | **`TASK-2.1`** | **Next.js 14 App + Zustand Store + Studio Shell** | Reactive theory store, lefty/TAB view ergonomics, Tone.js SSR-safe bridge, studio controls |
 | 🟢 **COMPLETE** | **`TASK-2.2`** | **Parallel 24-Fret SVG Fretboard Component** | Physics scale ($L=2200$px, min width $\ge 32$px), crowned nickel wires, top binding side dots, full-cell hitboxes, dynamic viewBox zoom |
-| 🟡 **NEXT** | **`TASK-2.3`** | **Interactive Note Pins & Scale/Degree Color Engine** | Color coding harmonic functions (Root Crimson, 3rd Blue, 5th Gold, 7th Purple, b5 Orange) & scale filtering |
+| 🟢 **COMPLETE** | **`TASK-2.3`** | **Interactive Note Pins & Scale/Degree Color Engine** | Color coding harmonic functions (Root Crimson, 3rd Blue, 5th Gold, 7th Purple, b5 Orange), scale/chord filtering, Target Chord Tones mode, Ghost notes |
+| 🟡 **NEXT** | **`TASK-2.4`** | **Visual Soloing Overlays** | Bounding zones & connectors for CAGED (5 shapes + roots), 3NPS (7 modes), Diagonal Highway, B.B./Albert King boxes, Triads |
 
 ---
 
@@ -91,5 +92,6 @@
 | **`TASK-1.5`** | 24-Fret Guitar Matrix & Soloing Boxes | 2026-11-02 | 16/16 `pytest` | `backend/app/theory/fretboard.py` (Standard/Drop-D/Eb tunings, 24-fret matrix, CAGED root anchors & voicings, Diagonal Highway, B.B./Albert King boxes, 3NPS, Octave GPS, static voice-leading) |
 | **`TASK-2.1`** | Frontend App Router, Zustand Theory Store & Studio Shell | 2026-11-03 | Build Clean (0 err) | `frontend/` (Next.js 16/14 App Router, TypeScript, Tailwind CSS, `useTheoryStore.ts`, SSR-safe `soundEngine.ts`, studio controls: key, scale/chord, tuning, display mode, lefty/TAB view, note inspector HUD, color legend) |
 | **`TASK-2.2`** | Parallel 24-Fret SVG Fretboard Component | 2026-11-03 | Build Clean (0 err) | `frontend/src/components/fretboard/Fretboard.tsx` (Physics scale $L=2200$px with min width $\ge 32$px, crowned nickel wires, top binding side dots, bone nut string notches, full-cell hover hitboxes, dynamic SVG viewBox zoom, headstock tuning badges) |
-| **Total** | **Phase 1 Theory Engine + Tasks 2.1 & 2.2** | | **71/71 Passing (100%) + Clean Next Build** | Complete deterministic engine & parallel 24-fret SVG instrument canvas |
+| **`TASK-2.3`** | Interactive Note Pins & Scale/Degree Color Engine | 2026-11-03 | Build Clean (0 err) | `frontend/src/components/fretboard/Fretboard.tsx`, `DisplayModeToggle.tsx` (Harmonic degree colors: Root Crimson, 3rd Blue, 5th Gold, Blue Note Orange, 7th Purple, Extensions Emerald; real-time scale/chord filtering; Target Chord Tones soloing spotlight; Isolated vs Ghost vs Full density modes; Note vs Degree toggle) |
+| **Total** | **Phase 1 Theory Engine + Tasks 2.1, 2.2, 2.3** | | **71/71 Passing (100%) + Clean Next Build** | Complete deterministic engine & musically reactive 24-fret soloing instrument |
 
