@@ -8,6 +8,7 @@ import { OverlayControls } from '@/components/controls/OverlayControls';
 import { TuningSelector } from '@/components/controls/TuningSelector';
 import { DisplayModeToggle } from '@/components/controls/DisplayModeToggle';
 import { FretboardSettings } from '@/components/controls/FretboardSettings';
+import { PlaybackBar } from '@/components/controls/PlaybackBar';
 import { NoteInspector } from '@/components/inspector/NoteInspector';
 import { FooterLegend } from '@/components/layout/FooterLegend';
 import { Fretboard } from '@/components/fretboard/Fretboard';
@@ -42,6 +43,11 @@ export default function Home() {
             <DisplayModeToggle />
             <FretboardSettings />
           </div>
+        </section>
+
+        {/* Audio Engine, Arpeggiator & Tonic Drone Bar */}
+        <section>
+          <PlaybackBar />
         </section>
 
         {/* Real-Time Note Inspector HUD */}

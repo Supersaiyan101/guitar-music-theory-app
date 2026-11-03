@@ -15,6 +15,8 @@ import {
   Handedness,
   FretRange,
   InspectedFretInfo,
+  TonePreset,
+  PlayDirection,
 } from '@/types/theory';
 import { soundEngine } from '@/lib/audio/soundEngine';
 
@@ -48,6 +50,9 @@ export interface TheoryState {
   isPlaying: boolean;
   isMuted: boolean;
   audioReady: boolean;
+  isDroneActive: boolean;
+  tonePreset: TonePreset;
+  playDirection: PlayDirection;
   activePlayingPin: { stringNumber: number; fretNumber: number } | null;
 
   // Actions
@@ -73,6 +78,10 @@ export interface TheoryState {
   setIsPlaying: (isPlaying: boolean) => void;
   setMuted: (muted: boolean) => void;
   setAudioReady: (ready: boolean) => void;
+  setTonePreset: (preset: TonePreset) => void;
+  setPlayDirection: (dir: PlayDirection) => void;
+  toggleDrone: () => Promise<void>;
+  stopPlayback: () => void;
   setActivePlayingPin: (pin: { stringNumber: number; fretNumber: number } | null) => void;
   playFretAudio: (pitchWithOctave: string) => Promise<void>;
   resetDefaults: () => void;
@@ -101,6 +110,9 @@ const DEFAULT_STATE = {
   isPlaying: false,
   isMuted: false,
   audioReady: false,
+  isDroneActive: false,
+  tonePreset: 'electric_clean' as TonePreset,
+  playDirection: 'ascending' as PlayDirection,
   activePlayingPin: null as { stringNumber: number; fretNumber: number } | null,
 };
 
@@ -109,6 +121,9 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
 
   setKey: (key: NoteName) => {
     set({ currentKey: key });
+    if (get().isDroneActive) {
+      soundEngine.startDrone(key);
+    }
     // If an inspected fret is active, clear it so there's no stale role
     if (get().inspectedFret) {
       set({ inspectedFret: null });
@@ -169,6 +184,29 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
   },
 
   setAudioReady: (ready: boolean) => set({ audioReady: ready }),
+
+  setTonePreset: (preset: TonePreset) => {
+    soundEngine.setTonePreset(preset);
+    set({ tonePreset: preset });
+  },
+
+  setPlayDirection: (playDirection: PlayDirection) => set({ playDirection }),
+
+  toggleDrone: async () => {
+    const nextState = !get().isDroneActive;
+    if (nextState) {
+      await soundEngine.startDrone(get().currentKey);
+      set({ isDroneActive: true, audioReady: true });
+    } else {
+      soundEngine.stopDrone();
+      set({ isDroneActive: false });
+    }
+  },
+
+  stopPlayback: () => {
+    soundEngine.stopSequence();
+    set({ isPlaying: false, activePlayingPin: null });
+  },
 
   setActivePlayingPin: (pin: { stringNumber: number; fretNumber: number } | null) =>
     set({ activePlayingPin: pin }),
