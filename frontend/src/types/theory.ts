@@ -150,6 +150,7 @@ export type Handedness = 'right' | 'left'; // left flips the nut to the right
 export type FretRange = 'full' | 'open_to_12' | 'upper_12_24' | 'box_focus';
 export type AccidentalMode = 'auto' | 'sharps' | 'flats';
 export type DisplayMode = 'notes' | 'intervals';
+export type DensityMode = 'isolated' | 'ghost' | 'all';
 
 export interface FretCoordinate {
   stringNumber: number; // 1 (High E) to 6 (Low E)

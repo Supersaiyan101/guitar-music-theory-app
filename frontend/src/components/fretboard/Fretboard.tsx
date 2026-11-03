@@ -5,12 +5,12 @@ import { useTheoryStore } from '@/store/useTheoryStore';
 import {
   calculateFretDistance,
   generateFretboardMatrix,
-  SCALE_DEFINITIONS,
-  CHORD_DEFINITIONS,
+  getHarmonicProfile,
+  noteToPitchClass,
   TUNINGS,
 } from '@/lib/theory/pitchMath';
 import { getDegreeColor } from '@/lib/theory/colorMap';
-import { FretCoordinate, IntervalDegree, NoteName } from '@/types/theory';
+import { FretCoordinate, NoteName } from '@/types/theory';
 
 // Inlay dot fret numbers
 const SINGLE_DOT_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
@@ -23,6 +23,8 @@ export const Fretboard: React.FC = () => {
     activeScale,
     activeChord,
     displayMode,
+    densityMode,
+    highlightChordTones,
     accidentalMode,
     activeOverlay,
     cagedShape,
@@ -105,37 +107,10 @@ export const Fretboard: React.FC = () => {
     return generateFretboardMatrix(tuning, currentKey, accidentalMode);
   }, [tuning, currentKey, accidentalMode]);
 
-  // Active scale / chord pitch classes for harmonic degree mapping
-  const activePitchClassMap = useMemo(() => {
-    const map = new Map<NoteName, { degree: IntervalDegree; isRoot: boolean }>();
-
-    let formula: number[] = [];
-    let degrees: IntervalDegree[] = [];
-
-    if (activeScale && SCALE_DEFINITIONS[activeScale]) {
-      formula = SCALE_DEFINITIONS[activeScale].formula;
-      degrees = SCALE_DEFINITIONS[activeScale].degrees;
-    } else if (activeChord && CHORD_DEFINITIONS[activeChord]) {
-      formula = CHORD_DEFINITIONS[activeChord].formula;
-      degrees = CHORD_DEFINITIONS[activeChord].degrees;
-    }
-
-    if (formula.length > 0) {
-      // Find the root pitch coordinate from matrix to resolve pitch class
-      const allCoords = matrix.flat();
-      const rootCoord = allCoords.find((c) => c.note === currentKey);
-      const rootPitchClass = rootCoord ? (rootCoord.octave * 12 + (matrix[0][0] ? 0 : 0)) : 0;
-
-      // In client mode, compute active scale notes
-      formula.forEach((offset, idx) => {
-        const degree = degrees[idx];
-        const isRoot = offset % 12 === 0;
-        // Map notes in formula
-      });
-    }
-
-    return map;
-  }, [activeScale, activeChord, currentKey, matrix]);
+  // Harmonic profile mapping pitch class (0..11) to degree, role, chord tone, preferred name
+  const harmonicProfile = useMemo(() => {
+    return getHarmonicProfile(currentKey, activeScale, activeChord, accidentalMode);
+  }, [currentKey, activeScale, activeChord, accidentalMode]);
 
   // Dynamic SVG viewBox computation based on fretRange
   const viewBoxString = useMemo(() => {
@@ -149,7 +124,7 @@ export const Fretboard: React.FC = () => {
       return `${minX} 0 ${width} ${totalSvgHeight}`;
     }
     if (fretRange === 'box_focus') {
-      // Focus on active 5-fret span (e.g. frets 4 to 9)
+      // Focus on active 5-fret span (frets 4 to 10)
       const minFret = 4;
       const maxFret = 10;
       const minX = Math.max(0, fretXPositions[minFret - 1] - 30);
@@ -161,17 +136,25 @@ export const Fretboard: React.FC = () => {
   }, [fretRange, fretXPositions, totalSvgWidth, totalSvgHeight]);
 
   const handleCellClick = (coord: FretCoordinate) => {
+    const pc = noteToPitchClass(coord.note);
+    const harmonicInfo = harmonicProfile.get(pc);
+
     playFretAudio(coord.pitchWithOctave);
     setInspectedFret({
-      coordinate: coord,
-      degreeName: coord.degree,
-      roleInChordOrScale: coord.isRoot
-        ? 'Root / Tonic'
-        : coord.degree
-        ? `Degree ${coord.degree}`
-        : coord.note === currentKey
-        ? 'Root Note'
-        : 'Chromatic Fret',
+      coordinate: {
+        ...coord,
+        note: harmonicInfo ? harmonicInfo.preferredNote : coord.note,
+        degree: harmonicInfo?.degree,
+        isRoot: harmonicInfo?.isRoot,
+      },
+      degreeName: harmonicInfo?.degree,
+      roleInChordOrScale: harmonicInfo
+        ? harmonicInfo.isRoot
+          ? 'Root / Tonic (Home Base)'
+          : harmonicInfo.isChordTone
+          ? `Chord Tone (${harmonicInfo.degree})`
+          : `Passing Tone (${harmonicInfo.degree})`
+        : 'Chromatic Passing Fret',
     });
   };
 
@@ -501,8 +484,13 @@ export const Fretboard: React.FC = () => {
             {[1, 2, 3, 4, 5, 6].map((strNum) => {
               const y = stringYPositions[strNum];
               const openPitch = tuningObj.strings[strNum - 1] || 'E2';
-              const openNote = openPitch.slice(0, -1);
-              const isRoot = openNote === currentKey;
+              const openNote = openPitch.slice(0, -1) as NoteName;
+              const pc = noteToPitchClass(openNote);
+              const harmonicInfo = harmonicProfile.get(pc);
+
+              const isInScale = !!harmonicInfo;
+              const isRoot = harmonicInfo?.isRoot || openNote === currentKey;
+              const degreeConfig = getDegreeColor(harmonicInfo?.degree);
 
               return (
                 <g
@@ -516,27 +504,35 @@ export const Fretboard: React.FC = () => {
                   <circle
                     cx={OPEN_STRING_X}
                     cy={y}
-                    r={11}
-                    fill={isRoot ? '#ef4444' : '#1e1b18'}
-                    stroke={isRoot ? '#fee2e2' : '#52433c'}
-                    strokeWidth={isRoot ? 2 : 1}
-                    className="group-hover:stroke-amber-400 group-hover:scale-110 transition-transform shadow-md"
+                    r={11.5}
+                    fill={isInScale ? degreeConfig.dotFill : '#1c1917'}
+                    stroke={
+                      isRoot
+                        ? '#ffffff'
+                        : isInScale
+                        ? degreeConfig.dotStroke
+                        : '#44403c'
+                    }
+                    strokeWidth={isRoot ? 2.5 : isInScale ? 1.5 : 1}
+                    className="group-hover:scale-110 transition-transform shadow-md"
                   />
                   <text
                     x={OPEN_STRING_X}
                     y={y + 3.5}
                     textAnchor="middle"
-                    className={`font-mono text-[9.5px] font-bold pointer-events-none ${
+                    className={`font-mono text-[9px] font-extrabold pointer-events-none ${
                       handedness === 'left' ? 'scale-x-[-1]' : ''
-                    } ${isRoot ? 'fill-white font-extrabold' : 'fill-zinc-300'}`}
+                    } ${isInScale ? 'fill-white' : 'fill-zinc-400'}`}
                   >
-                    {openPitch}
+                    {displayMode === 'intervals' && harmonicInfo
+                      ? harmonicInfo.degree
+                      : openPitch}
                   </text>
                 </g>
               );
             })}
 
-            {/* 11. Interactive Note Pins across Strings and Frets 1 to 24 */}
+            {/* 11. Dynamic Harmonic Note Pins across Strings and Frets 1 to 24 */}
             {matrix.map((stringFrets, strIdx) => {
               const strNum = strIdx + 1;
               const y = stringYPositions[strNum];
@@ -545,7 +541,17 @@ export const Fretboard: React.FC = () => {
                 if (coord.fretNumber === 0) return null; // Fret 0 handled by open badge
                 const x = fretCenterPositions[coord.fretNumber];
 
-                const isRoot = coord.note === currentKey;
+                const pc = noteToPitchClass(coord.note);
+                const harmonicInfo = harmonicProfile.get(pc);
+                const isInScale = !!harmonicInfo;
+
+                // Handle density modes
+                if (!isInScale && densityMode === 'isolated') {
+                  return null; // Clean uncluttered view
+                }
+
+                const isRoot = harmonicInfo?.isRoot || coord.note === currentKey;
+                const isChordTone = harmonicInfo?.isChordTone || false;
                 const isPlaying =
                   activePlayingPin?.stringNumber === strNum &&
                   activePlayingPin?.fretNumber === coord.fretNumber;
@@ -553,7 +559,74 @@ export const Fretboard: React.FC = () => {
                 const isOctaveHighlighted =
                   highlightedOctaveNote && coord.note === highlightedOctaveNote;
 
-                const color = isRoot ? getDegreeColor('1') : getDegreeColor(coord.degree);
+                // If ghost mode and not in scale:
+                if (!isInScale && densityMode === 'ghost') {
+                  return (
+                    <g
+                      key={`pin-${strNum}-${coord.fretNumber}`}
+                      onClick={() => handleCellClick(coord)}
+                      className="cursor-pointer group"
+                    >
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={8.5}
+                        fill="#18181b"
+                        stroke="#27272a"
+                        strokeWidth={0.8}
+                        opacity={0.5}
+                        className="group-hover:opacity-100 group-hover:stroke-zinc-500 transition-all"
+                      />
+                      <text
+                        x={x}
+                        y={y + 3}
+                        textAnchor="middle"
+                        className={`text-[8px] font-medium fill-zinc-600 group-hover:fill-zinc-300 pointer-events-none ${
+                          handedness === 'left' ? 'scale-x-[-1]' : ''
+                        }`}
+                      >
+                        {coord.note}
+                      </text>
+                    </g>
+                  );
+                }
+
+                // If all notes mode and not in scale:
+                if (!isInScale && densityMode === 'all') {
+                  return (
+                    <g
+                      key={`pin-${strNum}-${coord.fretNumber}`}
+                      onClick={() => handleCellClick(coord)}
+                      className="cursor-pointer group"
+                    >
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={9.5}
+                        fill="#18181b"
+                        stroke="#3f3f46"
+                        strokeWidth={1}
+                        className="group-hover:stroke-zinc-400 transition-all"
+                      />
+                      <text
+                        x={x}
+                        y={y + 3.2}
+                        textAnchor="middle"
+                        className={`text-[8.5px] font-semibold fill-zinc-400 group-hover:fill-white pointer-events-none ${
+                          handedness === 'left' ? 'scale-x-[-1]' : ''
+                        }`}
+                      >
+                        {coord.note}
+                      </text>
+                    </g>
+                  );
+                }
+
+                // Note IS in scale / chord!
+                const degreeConfig = getDegreeColor(harmonicInfo?.degree);
+
+                // Soloing Target Mode: dim passing tones if highlightChordTones is on
+                const isDimmedPassingTone = highlightChordTones && !isChordTone;
 
                 return (
                   <g
@@ -561,15 +634,30 @@ export const Fretboard: React.FC = () => {
                     onClick={() => handleCellClick(coord)}
                     className="cursor-pointer group"
                   >
-                    {/* Pulsing ring if playing or octave GPS active */}
+                    {/* Animated Pulse for Playback or Octave GPS */}
                     {(isPlaying || isOctaveHighlighted) && (
                       <circle
                         cx={x}
                         cy={y}
-                        r={16}
-                        fill={isOctaveHighlighted ? '#9333ea' : '#ef4444'}
-                        opacity={0.35}
+                        r={18}
+                        fill={isOctaveHighlighted ? '#a855f7' : '#ef4444'}
+                        opacity={0.38}
                         className="animate-ping"
+                      />
+                    )}
+
+                    {/* Blue Note Special Pulse Ring */}
+                    {harmonicInfo?.degree === 'b5' && (
+                      <circle
+                        cx={x}
+                        cy={y}
+                        r={14}
+                        fill="none"
+                        stroke="#f97316"
+                        strokeWidth={1.5}
+                        strokeDasharray="3, 2"
+                        opacity={0.7}
+                        className="animate-spin-slow"
                       />
                     )}
 
@@ -577,37 +665,36 @@ export const Fretboard: React.FC = () => {
                     <circle
                       cx={x}
                       cy={y}
-                      r={10.5}
-                      fill={isRoot ? '#ef4444' : isOctaveHighlighted ? '#9333ea' : '#1f1f24'}
+                      r={isRoot ? 11.5 : 10.5}
+                      fill={isDimmedPassingTone ? '#18181b' : degreeConfig.dotFill}
                       stroke={
                         isRoot
                           ? '#ffffff'
-                          : isOctaveHighlighted
-                          ? '#f3e8ff'
-                          : '#475569'
+                          : isDimmedPassingTone
+                          ? degreeConfig.dotFill
+                          : degreeConfig.dotStroke
                       }
-                      strokeWidth={isRoot || isOctaveHighlighted ? 2 : 1}
-                      className="transition-all duration-150 group-hover:r-[12.5px] group-hover:stroke-white shadow-md"
+                      strokeWidth={isRoot ? 2.5 : isDimmedPassingTone ? 1.5 : 1}
+                      opacity={isDimmedPassingTone ? 0.65 : 1}
+                      className="transition-all duration-150 group-hover:r-[13px] group-hover:stroke-white shadow-lg"
                     />
 
-                    {/* Note Name or Degree Text */}
+                    {/* Note Name or Degree Label */}
                     <text
                       x={x}
                       y={y + 3.5}
                       textAnchor="middle"
-                      className={`text-[9.5px] font-bold pointer-events-none ${
+                      className={`text-[9.5px] font-extrabold pointer-events-none ${
                         handedness === 'left' ? 'scale-x-[-1]' : ''
                       } ${
-                        isRoot || isOctaveHighlighted
-                          ? 'fill-white font-extrabold'
-                          : 'fill-zinc-200 group-hover:fill-white'
+                        isDimmedPassingTone
+                          ? 'fill-zinc-400 group-hover:fill-white'
+                          : 'fill-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]'
                       }`}
                     >
                       {displayMode === 'notes'
-                        ? coord.note
-                        : isRoot
-                        ? '1'
-                        : coord.degree || coord.note}
+                        ? harmonicInfo?.preferredNote || coord.note
+                        : harmonicInfo?.degree || coord.note}
                     </text>
                   </g>
                 );

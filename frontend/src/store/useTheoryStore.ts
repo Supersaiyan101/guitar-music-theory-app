@@ -5,6 +5,7 @@ import {
   ScaleType,
   ChordType,
   DisplayMode,
+  DensityMode,
   AccidentalMode,
   SoloOverlay,
   CagedShape,
@@ -24,6 +25,8 @@ export interface TheoryState {
 
   // Visual & Fretboard Display Modes
   displayMode: DisplayMode;
+  densityMode: DensityMode;
+  highlightChordTones: boolean;
   accidentalMode: AccidentalMode;
   activeOverlay: SoloOverlay;
   cagedShape: CagedShape;
@@ -48,6 +51,8 @@ export interface TheoryState {
   setScale: (scale: ScaleType | null) => void;
   setChord: (chord: ChordType | null) => void;
   setDisplayMode: (mode: DisplayMode) => void;
+  setDensityMode: (mode: DensityMode) => void;
+  setHighlightChordTones: (highlight: boolean) => void;
   setAccidentalMode: (mode: AccidentalMode) => void;
   setOverlay: (overlay: SoloOverlay) => void;
   setCagedShape: (shape: CagedShape) => void;
@@ -71,6 +76,8 @@ const DEFAULT_STATE = {
   activeScale: 'minor_pentatonic' as ScaleType | null,
   activeChord: null as ChordType | null,
   displayMode: 'notes' as DisplayMode,
+  densityMode: 'isolated' as DensityMode,
+  highlightChordTones: false,
   accidentalMode: 'auto' as AccidentalMode,
   activeOverlay: 'none' as SoloOverlay,
   cagedShape: 'A' as CagedShape,
@@ -110,6 +117,10 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
   },
 
   setDisplayMode: (mode: DisplayMode) => set({ displayMode: mode }),
+
+  setDensityMode: (mode: DensityMode) => set({ densityMode: mode }),
+
+  setHighlightChordTones: (highlight: boolean) => set({ highlightChordTones: highlight }),
 
   setAccidentalMode: (mode: AccidentalMode) => set({ accidentalMode: mode }),
 

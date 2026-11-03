@@ -538,3 +538,56 @@ export function generateFretboardMatrix(
 
   return matrix;
 }
+
+export interface HarmonicNoteInfo {
+  degree: IntervalDegree;
+  isRoot: boolean;
+  isChordTone: boolean;
+  role: string;
+  preferredNote: NoteName;
+}
+
+// Chord tones defining harmonic foundation: Roots, 3rds, 5ths, 7ths
+const CHORD_TONE_DEGREES = new Set<IntervalDegree>([
+  '1', 'b3', '3', 'b5', '5', '#5', 'bb7', 'b7', '7'
+]);
+
+export function getHarmonicProfile(
+  rootKey: NoteName,
+  activeScale: ScaleType | null,
+  activeChord: ChordType | null,
+  accidentalMode: AccidentalMode = 'auto'
+): Map<number, HarmonicNoteInfo> {
+  const profile = new Map<number, HarmonicNoteInfo>();
+  const rootPc = noteToPitchClass(rootKey);
+
+  let formula: number[] = [0];
+  let degrees: IntervalDegree[] = ['1'];
+
+  if (activeScale && SCALE_DEFINITIONS[activeScale]) {
+    formula = SCALE_DEFINITIONS[activeScale].formula;
+    degrees = SCALE_DEFINITIONS[activeScale].degrees;
+  } else if (activeChord && CHORD_DEFINITIONS[activeChord]) {
+    formula = CHORD_DEFINITIONS[activeChord].formula;
+    degrees = CHORD_DEFINITIONS[activeChord].degrees;
+  }
+
+  formula.forEach((semitones, idx) => {
+    const pc = (rootPc + semitones) % 12;
+    const degree = degrees[idx] || '1';
+    const isRoot = semitones % 12 === 0;
+    const isChordTone = CHORD_TONE_DEGREES.has(degree);
+    const role = DEGREE_DESCRIPTIONS[degree] || 'Chord Tone';
+    const preferredNote = getPreferredPitchName(pc, rootKey, accidentalMode);
+
+    profile.set(pc, {
+      degree,
+      isRoot,
+      isChordTone,
+      role,
+      preferredNote,
+    });
+  });
+
+  return profile;
+}
