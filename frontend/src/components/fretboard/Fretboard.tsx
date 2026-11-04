@@ -47,6 +47,15 @@ export const Fretboard: React.FC = () => {
     activePlayingPin,
     playFretAudio,
     setInspectedFret,
+    studioMode,
+    progressionAnalysis,
+    currentChordIndex,
+    showGuideToneHalos,
+    showCommonToneBadges,
+    showVoiceLeadingVectors,
+    staticPositionFret,
+    targetDrillActive,
+    evaluateDrillClick,
   } = useTheoryStore();
 
   const [hoveredCell, setHoveredCell] = useState<{ stringNumber: number; fretNumber: number } | null>(null);
@@ -130,6 +139,111 @@ export const Fretboard: React.FC = () => {
   const threeNpsData = useMemo(() => getThreeNpsShape(currentKey, threeNpsShape), [currentKey, threeNpsShape]);
   const triadData = useMemo(() => getMovableTriadInversions(currentKey, triadStringSet), [currentKey, triadStringSet]);
 
+  // Phase 3 Progression Voice-Leading & Harmonic Targets
+  const isProgressionMode = studioMode === 'progression' && !!progressionAnalysis;
+  const currentChordAnalysis = useMemo(() => {
+    if (!isProgressionMode || !progressionAnalysis) return null;
+    return progressionAnalysis.chords[currentChordIndex] || null;
+  }, [isProgressionMode, progressionAnalysis, currentChordIndex]);
+
+  const chordRootPc = useMemo(() => {
+    if (!currentChordAnalysis) return -1;
+    return noteToPitchClass(currentChordAnalysis.root);
+  }, [currentChordAnalysis]);
+
+  const guideTonePcs = useMemo(() => {
+    if (!currentChordAnalysis || !showGuideToneHalos) return new Set<number>();
+    return new Set(currentChordAnalysis.guide_tones.map((t) => noteToPitchClass(t)));
+  }, [currentChordAnalysis, showGuideToneHalos]);
+
+  const commonTonePcs = useMemo(() => {
+    if (!currentChordAnalysis || !showCommonToneBadges) return new Set<number>();
+    return new Set(currentChordAnalysis.common_tones_with_next.map((t) => noteToPitchClass(t)));
+  }, [currentChordAnalysis, showCommonToneBadges]);
+
+  interface VoiceLeadingVectorArc {
+    stringNumber: number;
+    fromFret: number;
+    toFret: number;
+    fromX: number;
+    toX: number;
+    y: number;
+    label: string;
+    diff: number;
+    isGuideTone: boolean;
+  }
+
+  const voiceLeadingVectors = useMemo(() => {
+    if (!isProgressionMode || !currentChordAnalysis || !showVoiceLeadingVectors) return [];
+
+    const vectors: VoiceLeadingVectorArc[] = [];
+    const steps = currentChordAnalysis.voice_leading_to_next;
+    if (!steps || steps.length === 0) return [];
+
+    const minFret = staticPositionFret !== null ? staticPositionFret : 1;
+    const maxFret = staticPositionFret !== null ? Math.min(24, staticPositionFret + 4) : 24;
+
+    for (const step of steps) {
+      const fromPc = noteToPitchClass(step.from_note);
+      const toPc = noteToPitchClass(step.to_note);
+
+      let diff = (toPc - fromPc + 12) % 12;
+      if (diff > 6) diff -= 12;
+
+      // Focus on half-step (-1, +1) and whole-step (-2, +2) scalar/voice shifts
+      if (diff === 0 || Math.abs(diff) > 2) continue;
+
+      for (let strIdx = 0; strIdx < 6; strIdx++) {
+        const strNum = strIdx + 1;
+        const stringFrets = matrix[strIdx];
+        if (!stringFrets) continue;
+
+        for (const coord of stringFrets) {
+          if (coord.fretNumber < minFret || coord.fretNumber > maxFret) continue;
+
+          if (noteToPitchClass(coord.note) === fromPc) {
+            const targetFret = coord.fretNumber + diff;
+            if (targetFret >= 1 && targetFret <= 24) {
+              const fromX = fretCenterPositions[coord.fretNumber];
+              const toX = fretCenterPositions[targetFret];
+              const y = stringYPositions[strNum];
+              const label =
+                diff === 1
+                  ? '½ step ↑'
+                  : diff === -1
+                  ? '½ step ↓'
+                  : diff === 2
+                  ? '1 step ↑'
+                  : '1 step ↓';
+
+              vectors.push({
+                stringNumber: strNum,
+                fromFret: coord.fretNumber,
+                toFret: targetFret,
+                fromX,
+                toX,
+                y,
+                label,
+                diff,
+                isGuideTone: step.is_guide_tone_resolution,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return vectors;
+  }, [
+    isProgressionMode,
+    currentChordAnalysis,
+    showVoiceLeadingVectors,
+    staticPositionFret,
+    matrix,
+    fretCenterPositions,
+    stringYPositions,
+  ]);
+
   // Dynamic SVG viewBox computation based on fretRange and active overlay
   const viewBoxString = useMemo(() => {
     if (fretRange === 'open_to_12') {
@@ -143,7 +257,9 @@ export const Fretboard: React.FC = () => {
     }
     if (fretRange === 'box_focus') {
       let span: [number, number] = [4, 10];
-      if (activeOverlay === 'caged' && cagedData[cagedShape]) {
+      if (staticPositionFret !== null) {
+        span = [staticPositionFret, Math.min(24, staticPositionFret + 4)];
+      } else if (activeOverlay === 'caged' && cagedData[cagedShape]) {
         span = cagedData[cagedShape].fretSpan;
       } else if (activeOverlay === 'three_nps') {
         span = threeNpsData.fretSpan;
@@ -178,6 +294,7 @@ export const Fretboard: React.FC = () => {
     albertData,
     highwayData,
     triadData,
+    staticPositionFret,
   ]);
 
   const handleCellClick = (coord: FretCoordinate) => {
@@ -201,6 +318,10 @@ export const Fretboard: React.FC = () => {
           : `Passing Tone (${harmonicInfo.degree})`
         : 'Chromatic Passing Fret',
     });
+
+    if (targetDrillActive) {
+      evaluateDrillClick(coord);
+    }
   };
 
   const tuningObj = TUNINGS[tuning];
@@ -295,6 +416,30 @@ export const Fretboard: React.FC = () => {
                 orient="auto-start-reverse"
               >
                 <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+              </marker>
+
+              {/* Arrow Markers for Voice-Leading Progression Vectors */}
+              <marker
+                id="vlArrowDown"
+                viewBox="0 0 10 10"
+                refX="7"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#06b6d4" />
+              </marker>
+              <marker
+                id="vlArrowUp"
+                viewBox="0 0 10 10"
+                refX="7"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
               </marker>
             </defs>
 
@@ -809,6 +954,105 @@ export const Fretboard: React.FC = () => {
               </g>
             )}
 
+            {/* 8G. PROGRESSION STATIC HAND POSITION LOCK */}
+            {staticPositionFret !== null && (
+              <g className="static-hand-lock">
+                {(() => {
+                  const startFret = staticPositionFret;
+                  const endFret = Math.min(24, staticPositionFret + 4);
+                  const x1 = fretXPositions[startFret - 1];
+                  const x2 = fretXPositions[endFret];
+                  const width = x2 - x1;
+
+                  return (
+                    <g>
+                      {/* Luminous Neon Position Bounding Frame */}
+                      <rect
+                        x={x1}
+                        y={NECK_Y - 2}
+                        width={width}
+                        height={NECK_HEIGHT + 4}
+                        rx={8}
+                        fill="rgba(6, 182, 212, 0.08)"
+                        stroke="#06b6d4"
+                        strokeWidth={2.4}
+                        strokeDasharray="6, 3"
+                      />
+                      {/* Top Hand Position Banner Tag */}
+                      <rect
+                        x={x1 + 6}
+                        y={NECK_Y - 19}
+                        width={132}
+                        height={16}
+                        rx={4}
+                        fill="#083344"
+                        stroke="#06b6d4"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={x1 + 72}
+                        y={NECK_Y - 8}
+                        textAnchor="middle"
+                        className={`text-[8px] font-black fill-cyan-300 tracking-wider pointer-events-none uppercase ${
+                          handedness === 'left' ? 'scale-x-[-1]' : ''
+                        }`}
+                      >
+                        🎯 Hand Lock: Frets {startFret}–{endFret}
+                      </text>
+                    </g>
+                  );
+                })()}
+              </g>
+            )}
+
+            {/* 8H. PROGRESSION VOICE-LEADING VECTOR ARCS */}
+            {voiceLeadingVectors.length > 0 && (
+              <g className="voice-leading-vectors">
+                {voiceLeadingVectors.map((vec, idx) => {
+                  const isAscending = vec.diff > 0;
+                  const strokeColor = isAscending ? '#10b981' : '#06b6d4';
+                  const markerId = isAscending ? 'url(#vlArrowUp)' : 'url(#vlArrowDown)';
+                  const midX = (vec.fromX + vec.toX) / 2;
+                  const arcHeight = Math.abs(vec.diff) === 1 ? 14 : 20;
+                  const controlY = vec.y - arcHeight;
+
+                  return (
+                    <g key={`vl-vector-${idx}`} className="transition-all">
+                      <path
+                        d={`M ${vec.fromX} ${vec.y - 7} Q ${midX} ${controlY} ${vec.toX} ${vec.y - 7}`}
+                        fill="none"
+                        stroke={strokeColor}
+                        strokeWidth={vec.isGuideTone ? 2.5 : 1.8}
+                        strokeDasharray={vec.isGuideTone ? undefined : '3, 2'}
+                        markerEnd={markerId}
+                      />
+                      <rect
+                        x={midX - 16}
+                        y={controlY - 9}
+                        width={32}
+                        height={11}
+                        rx={3}
+                        fill="#09090b"
+                        stroke={strokeColor}
+                        strokeWidth={0.8}
+                        opacity={0.95}
+                      />
+                      <text
+                        x={midX}
+                        y={controlY - 1}
+                        textAnchor="middle"
+                        className={`text-[6.5px] font-black ${
+                          isAscending ? 'fill-emerald-300' : 'fill-cyan-300'
+                        } pointer-events-none ${handedness === 'left' ? 'scale-x-[-1]' : ''}`}
+                      >
+                        {vec.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
             {/* 9. Full-Cell Interactive Hitboxes & Hover Highlights */}
             {matrix.map((stringFrets, strIdx) => {
               const strNum = strIdx + 1;
@@ -895,15 +1139,83 @@ export const Fretboard: React.FC = () => {
               const isRoot = harmonicInfo?.isRoot || openNote === currentKey;
               const degreeConfig = getDegreeColor(harmonicInfo?.degree);
 
+              const isGuideTone = isProgressionMode && showGuideToneHalos && guideTonePcs.has(pc);
+              let guideToneLabel: '3rd' | '7th' | null = null;
+              if (isGuideTone && chordRootPc !== -1) {
+                const diffFromRoot = (pc - chordRootPc + 12) % 12;
+                if (diffFromRoot === 3 || diffFromRoot === 4) guideToneLabel = '3rd';
+                else if (diffFromRoot === 10 || diffFromRoot === 11) guideToneLabel = '7th';
+              }
+              const isCommonTone = isProgressionMode && showCommonToneBadges && commonTonePcs.has(pc);
+              const openStringDimmed = staticPositionFret !== null && staticPositionFret > 1;
+
               return (
                 <g
                   key={`headstock-badge-${strNum}`}
                   className="cursor-pointer group"
+                  opacity={openStringDimmed ? 0.25 : 1}
                   onClick={() => {
                     const coord = matrix[strNum - 1]?.[0];
                     if (coord) handleCellClick(coord);
                   }}
                 >
+                  {isGuideTone && guideToneLabel && (
+                    <g>
+                      <circle
+                        cx={OPEN_STRING_X}
+                        cy={y}
+                        r={16.5}
+                        fill="none"
+                        stroke={guideToneLabel === '3rd' ? '#f59e0b' : '#a855f7'}
+                        strokeWidth={2}
+                        strokeDasharray="3, 2"
+                        className="animate-spin-slow"
+                        opacity={0.9}
+                      />
+                      <rect
+                        x={OPEN_STRING_X + 5}
+                        y={y - 15}
+                        width={18}
+                        height={9.5}
+                        rx={2.5}
+                        fill={guideToneLabel === '3rd' ? '#f59e0b' : '#a855f7'}
+                      />
+                      <text
+                        x={OPEN_STRING_X + 14}
+                        y={y - 7.5}
+                        textAnchor="middle"
+                        className={`text-[7px] font-black fill-zinc-950 pointer-events-none ${
+                          handedness === 'left' ? 'scale-x-[-1]' : ''
+                        }`}
+                      >
+                        {guideToneLabel}
+                      </text>
+                    </g>
+                  )}
+
+                  {isCommonTone && (
+                    <g>
+                      <circle
+                        cx={OPEN_STRING_X - 9}
+                        cy={y - 9}
+                        r={5.5}
+                        fill="#10b981"
+                        stroke="#064e3b"
+                        strokeWidth={1}
+                      />
+                      <text
+                        x={OPEN_STRING_X - 9}
+                        y={y - 6.5}
+                        textAnchor="middle"
+                        className={`text-[7px] font-black fill-white pointer-events-none ${
+                          handedness === 'left' ? 'scale-x-[-1]' : ''
+                        }`}
+                      >
+                        💎
+                      </text>
+                    </g>
+                  )}
+
                   <circle
                     cx={OPEN_STRING_X}
                     cy={y}
@@ -948,6 +1260,13 @@ export const Fretboard: React.FC = () => {
                 const harmonicInfo = harmonicProfile.get(pc);
                 const isInScale = !!harmonicInfo;
 
+                // Static Hand Position Locking Dimmer
+                const isInStaticPosition =
+                  staticPositionFret === null ||
+                  (coord.fretNumber >= staticPositionFret &&
+                    coord.fretNumber <= staticPositionFret + 4);
+                const pinOpacity = isInStaticPosition ? 1 : 0.2;
+
                 if (!isInScale && densityMode === 'isolated') {
                   return null;
                 }
@@ -961,12 +1280,26 @@ export const Fretboard: React.FC = () => {
                 const isOctaveHighlighted =
                   highlightedOctaveNote && coord.note === highlightedOctaveNote;
 
+                // Guide Tone and Common Tone checks for progression flight path
+                const isGuideTone =
+                  isProgressionMode && showGuideToneHalos && guideTonePcs.has(pc);
+                let guideToneLabel: '3rd' | '7th' | null = null;
+                if (isGuideTone && chordRootPc !== -1) {
+                  const diffFromRoot = (pc - chordRootPc + 12) % 12;
+                  if (diffFromRoot === 3 || diffFromRoot === 4) guideToneLabel = '3rd';
+                  else if (diffFromRoot === 10 || diffFromRoot === 11) guideToneLabel = '7th';
+                }
+
+                const isCommonTone =
+                  isProgressionMode && showCommonToneBadges && commonTonePcs.has(pc);
+
                 if (!isInScale && densityMode === 'ghost') {
                   return (
                     <g
                       key={`pin-${strNum}-${coord.fretNumber}`}
                       onClick={() => handleCellClick(coord)}
                       className="cursor-pointer group"
+                      opacity={pinOpacity}
                     >
                       <circle
                         cx={x}
@@ -998,6 +1331,7 @@ export const Fretboard: React.FC = () => {
                       key={`pin-${strNum}-${coord.fretNumber}`}
                       onClick={() => handleCellClick(coord)}
                       className="cursor-pointer group"
+                      opacity={pinOpacity}
                     >
                       <circle
                         cx={x}
@@ -1030,6 +1364,7 @@ export const Fretboard: React.FC = () => {
                     key={`pin-${strNum}-${coord.fretNumber}`}
                     onClick={() => handleCellClick(coord)}
                     className="cursor-pointer group"
+                    opacity={pinOpacity}
                   >
                     {(isPlaying || isOctaveHighlighted) && (
                       <circle
@@ -1054,6 +1389,67 @@ export const Fretboard: React.FC = () => {
                         opacity={0.7}
                         className="animate-spin-slow"
                       />
+                    )}
+
+                    {/* Guide Tone Target Halo & Badge (3rd or 7th) */}
+                    {isGuideTone && guideToneLabel && (
+                      <g>
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r={16.5}
+                          fill="none"
+                          stroke={guideToneLabel === '3rd' ? '#f59e0b' : '#a855f7'}
+                          strokeWidth={2}
+                          strokeDasharray="3, 2"
+                          className="animate-spin-slow"
+                          opacity={0.9}
+                        />
+                        <rect
+                          x={x + 5}
+                          y={y - 15}
+                          width={18}
+                          height={9.5}
+                          rx={2.5}
+                          fill={guideToneLabel === '3rd' ? '#f59e0b' : '#a855f7'}
+                          className="shadow-sm"
+                        />
+                        <text
+                          x={x + 14}
+                          y={y - 7.5}
+                          textAnchor="middle"
+                          className={`text-[7px] font-black fill-zinc-950 pointer-events-none ${
+                            handedness === 'left' ? 'scale-x-[-1]' : ''
+                          }`}
+                        >
+                          {guideToneLabel}
+                        </text>
+                      </g>
+                    )}
+
+                    {/* Common Tone Pivot Badge */}
+                    {isCommonTone && (
+                      <g>
+                        <circle
+                          cx={x - 9}
+                          cy={y - 9}
+                          r={5.5}
+                          fill="#10b981"
+                          stroke="#064e3b"
+                          strokeWidth={1}
+                          className="shadow-sm"
+                        />
+                        <text
+                          x={x - 9}
+                          y={y - 6.5}
+                          textAnchor="middle"
+                          className={`text-[7px] font-black fill-white pointer-events-none ${
+                            handedness === 'left' ? 'scale-x-[-1]' : ''
+                          }`}
+                        >
+                          💎
+                        </text>
+                      </g>
                     )}
 
                     <circle
