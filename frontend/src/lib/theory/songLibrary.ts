@@ -419,3 +419,4 @@ export function listCuratedSongs(genre?: string): SongProgression[] {
   if (!genre) return CURATED_SONGS;
   return CURATED_SONGS.filter((s) => s.genre === genre);
 }
+

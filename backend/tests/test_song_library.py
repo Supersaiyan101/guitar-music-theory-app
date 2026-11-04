@@ -130,3 +130,4 @@ def test_parse_progression_input_empty_raises():
     """Confirms error handling on empty or whitespace string."""
     with pytest.raises(ValueError, match="cannot be empty"):
         parse_progression_input("   ")
+
