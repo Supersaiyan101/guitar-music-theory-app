@@ -181,3 +181,66 @@ export interface CagedAnchor {
   rootFret: number;
   fretSpan: [number, number];
 }
+
+// ---------------------------------------------------------------------------
+// Phase 3 Progression & Voice-Leading Contracts
+// ---------------------------------------------------------------------------
+
+export type HarmonicFunction =
+  | 'Tonic'
+  | 'Subdominant'
+  | 'Dominant'
+  | 'Secondary Dominant'
+  | 'Modal Interchange'
+  | 'Tritone Substitution'
+  | 'Neapolitan'
+  | 'Passing';
+
+export type VoiceLeadingMovement =
+  | 'common_tone'
+  | 'half_step_down'
+  | 'half_step_up'
+  | 'whole_step_down'
+  | 'whole_step_up'
+  | 'leap';
+
+export interface VoiceLeadingStep {
+  from_note: string;
+  from_degree: string;
+  to_note: string;
+  to_degree: string;
+  semitone_distance: number;
+  movement_type: VoiceLeadingMovement;
+  is_guide_tone_resolution: boolean;
+}
+
+export interface ScaleRecommendations {
+  parent: string;
+  modal: string;
+  blues: string;
+  spicy: string;
+}
+
+export interface ChordAnalysis {
+  symbol: string;
+  root: string;
+  quality: string;
+  chord_tones: string[];
+  guide_tones: string[];
+  roman_numeral: string;
+  harmonic_function: HarmonicFunction;
+  pedagogical_insight: string;
+  common_tones_with_next: string[];
+  voice_leading_to_next: VoiceLeadingStep[];
+  recommended_scales: ScaleRecommendations;
+}
+
+export interface ProgressionAnalysisResult {
+  key: string;
+  mode: string;
+  confidence: number;
+  total_bars: number;
+  chords: ChordAnalysis[];
+  summary_description: string;
+}
+

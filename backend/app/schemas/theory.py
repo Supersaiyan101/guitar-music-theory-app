@@ -90,3 +90,51 @@ class ProgressionSection(BaseModel):
     bars: int = Field(..., ge=1)
     recommended_scales: List[str] = Field(default_factory=list, description="Recommended soloing scales for this section")
 
+
+class HarmonicFunction(str, Enum):
+    TONIC = "Tonic"
+    SUBDOMINANT = "Subdominant"
+    DOMINANT = "Dominant"
+    SECONDARY_DOMINANT = "Secondary Dominant"
+    MODAL_INTERCHANGE = "Modal Interchange"
+    TRITONE_SUB = "Tritone Substitution"
+    NEAPOLITAN = "Neapolitan"
+    PASSING = "Passing"
+
+
+class VoiceLeadingStep(BaseModel):
+    """Individual voice connection between two consecutive chords."""
+    from_note: str = Field(..., description="Outgoing note name, e.g. 'C'")
+    from_degree: str = Field(..., description="Role in outgoing chord: '3', 'b7', '1', '5'")
+    to_note: str = Field(..., description="Incoming target note name, e.g. 'B'")
+    to_degree: str = Field(..., description="Role in incoming chord: '3', 'b7', '1', '5'")
+    semitone_distance: int = Field(..., description="Chromatic movement distance (-6 to +6)")
+    movement_type: str = Field(..., description="'common_tone', 'half_step_down', 'half_step_up', 'whole_step_down', 'whole_step_up', 'leap'")
+    is_guide_tone_resolution: bool = Field(default=False, description="True if 7th -> 3rd or 3rd -> 7th or 7th -> 1")
+
+
+class ChordAnalysis(BaseModel):
+    """Deep harmonic and pedagogical analysis for a single chord in a progression."""
+    symbol: str
+    root: str
+    quality: str
+    chord_tones: List[str]
+    guide_tones: List[str] = Field(default_factory=list, description="Guide tones [3rd, 7th]")
+    roman_numeral: str = Field(..., description="Harmonic Roman numeral, e.g. 'ii7', 'V7', 'bVII', 'V7/V'")
+    harmonic_function: HarmonicFunction
+    pedagogical_insight: str = Field(..., description="Guitarist-oriented theory breakdown explaining why the chord works")
+    common_tones_with_next: List[str] = Field(default_factory=list, description="Pitch classes that do not move")
+    voice_leading_to_next: List[VoiceLeadingStep] = Field(default_factory=list, description="Voice-leading connections to next chord")
+    recommended_scales: dict = Field(default_factory=dict, description="Dictionary of scale suggestions {'parent': '...', 'modal': '...', 'blues': '...', 'spicy': '...'}")
+
+
+class ProgressionAnalysisResult(BaseModel):
+    """Full progression analysis output with key detection and voice leading."""
+    key: str
+    mode: str
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    total_bars: int
+    chords: List[ChordAnalysis]
+    summary_description: str
+
+

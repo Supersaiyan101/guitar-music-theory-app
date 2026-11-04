@@ -292,3 +292,4 @@ export const PlaybackBar: React.FC = () => {
     </div>
   );
 };
+
