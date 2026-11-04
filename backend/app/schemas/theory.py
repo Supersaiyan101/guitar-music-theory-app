@@ -138,3 +138,28 @@ class ProgressionAnalysisResult(BaseModel):
     summary_description: str
 
 
+class BarChord(BaseModel):
+    """A chord event inside a measure with beat duration."""
+    chord: str = Field(..., description="Chord symbol, e.g. 'Em', 'G7'")
+    beats: int = Field(default=4, ge=1, le=8, description="Duration in beats within the bar")
+
+
+class SongProgressionDefinition(BaseModel):
+    """Complete specification of a curated or custom song progression."""
+    id: str = Field(..., description="Unique slug, e.g. 'little_wing'")
+    title: str = Field(..., description="Song or progression name")
+    artist: Optional[str] = Field(default=None, description="Original artist or composer")
+    genre: str = Field(..., description="'classic_rock', 'blues_funk', 'jazz_neosoul', 'pop_modern'")
+    difficulty: str = Field(default="intermediate", description="'beginner', 'intermediate', 'advanced'")
+    default_tempo: int = Field(default=100, ge=40, le=260, description="Default tempo in BPM")
+    time_signature: str = Field(default="4/4", description="'4/4', '3/4', '6/8'")
+    key: str = Field(..., description="Tonic key root, e.g. 'G', 'C', 'Am'")
+    mode: str = Field(default="major", description="'major' or 'minor'")
+    bars: List[List[BarChord]] = Field(..., description="List of measures, each containing one or more chords with beats")
+    chords_sequence: List[str] = Field(default_factory=list, description="Flat list of chords in sequence")
+    chord_durations: List[int] = Field(default_factory=list, description="Flat list of beat durations")
+    soloing_tip: str = Field(..., description="Guitarist master advice for improvising over this tune")
+    iconic_tone: Optional[str] = Field(default=None, description="Guitar tone & gear recommendation")
+
+
+

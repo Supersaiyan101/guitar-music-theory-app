@@ -244,3 +244,35 @@ export interface ProgressionAnalysisResult {
   summary_description: string;
 }
 
+export type SongGenre =
+  | 'classic_rock'
+  | 'blues_funk'
+  | 'jazz_neosoul'
+  | 'pop_modern'
+  | 'custom';
+
+export type SongDifficulty = 'beginner' | 'intermediate' | 'advanced';
+
+export interface SongBarChord {
+  chord: string;
+  beats: number;
+}
+
+export interface SongProgression {
+  id: string;
+  title: string;
+  artist?: string;
+  genre: SongGenre;
+  difficulty: SongDifficulty;
+  default_tempo: number;
+  time_signature: string;
+  key: string;
+  mode: 'major' | 'minor';
+  bars: SongBarChord[][];
+  chords_sequence: string[];
+  chord_durations: number[];
+  soloing_tip: string;
+  iconic_tone?: string;
+}
+
+

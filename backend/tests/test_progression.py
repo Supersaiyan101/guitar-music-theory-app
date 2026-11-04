@@ -216,3 +216,4 @@ def test_empty_progression_raises():
     """Confirms error handling on empty progression list."""
     with pytest.raises(ValueError, match="Progression cannot be empty"):
         analyze_progression([])
+
