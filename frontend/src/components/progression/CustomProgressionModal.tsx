@@ -160,3 +160,4 @@ export const CustomProgressionModal: React.FC = () => {
     </div>
   );
 };
+
