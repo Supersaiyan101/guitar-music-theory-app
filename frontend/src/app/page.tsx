@@ -12,10 +12,14 @@ import { PlaybackBar } from '@/components/controls/PlaybackBar';
 import { NoteInspector } from '@/components/inspector/NoteInspector';
 import { FooterLegend } from '@/components/layout/FooterLegend';
 import { Fretboard } from '@/components/fretboard/Fretboard';
+import { ProgressionTimeline } from '@/components/progression/ProgressionTimeline';
+import { HarmonicContextHUD } from '@/components/progression/HarmonicContextHUD';
 import { useTheoryStore } from '@/store/useTheoryStore';
 
 export default function Home() {
   const {
+    studioMode,
+    setStudioMode,
     currentKey,
     tuning,
     activeScale,
@@ -24,6 +28,7 @@ export default function Home() {
     activeOverlay,
     cagedShape,
     stringOrientation,
+    activeProgression,
   } = useTheoryStore();
 
   return (
@@ -33,29 +38,89 @@ export default function Home() {
 
       {/* Main Studio Body */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-5">
-        {/* Top Control Bar Grid */}
-        <section className="flex flex-col gap-3.5 bg-zinc-950/60 border border-zinc-800/80 p-4 sm:p-5 rounded-2xl shadow-xl shadow-black/50">
-          <KeySelector />
-          <ScaleChordPicker />
-          <OverlayControls />
-          <TuningSelector />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
-            <DisplayModeToggle />
-            <FretboardSettings />
+        {/* Studio Mode Switcher */}
+        <section className="flex flex-wrap items-center justify-between gap-3 bg-zinc-950/80 border border-zinc-800/80 p-2 sm:p-2.5 rounded-2xl shadow-xl shadow-black/40">
+          <div className="flex items-center gap-1.5 p-1 bg-zinc-900/90 rounded-xl border border-zinc-800">
+            <button
+              onClick={() => setStudioMode('explorer')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+                studioMode === 'explorer'
+                  ? 'bg-zinc-800 text-white shadow-md border border-zinc-700'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <span>🔍</span>
+              <span>Fretboard Explorer</span>
+            </button>
+            <button
+              onClick={() => setStudioMode('progression')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
+                studioMode === 'progression'
+                  ? 'bg-cyan-950/80 text-cyan-300 shadow-md border border-cyan-500/60 ring-1 ring-cyan-500/30'
+                  : 'text-zinc-400 hover:text-cyan-300'
+              }`}
+            >
+              <span>🎵</span>
+              <span>Song Progression Flight-Path</span>
+              <span className="px-1.5 py-0.5 rounded bg-cyan-500 text-zinc-950 text-[9px] font-extrabold uppercase tracking-tight">
+                New
+              </span>
+            </button>
+          </div>
+
+          <div className="text-xs text-zinc-400 font-mono px-3 py-1 rounded-lg bg-zinc-900/50 border border-zinc-800/60 hidden sm:block">
+            {studioMode === 'progression' ? (
+              <span>
+                Active Tune: <strong className="text-cyan-400">{activeProgression.title}</strong> ({activeProgression.key} {activeProgression.mode})
+              </span>
+            ) : (
+              <span>
+                Active Mode: <strong className="text-white">Static Scale/Chord Analysis</strong>
+              </span>
+            )}
           </div>
         </section>
 
-        {/* Audio Engine, Arpeggiator & Tonic Drone Bar */}
-        <section>
-          <PlaybackBar />
-        </section>
+        {/* Dynamic Studio Layout based on Studio Mode */}
+        {studioMode === 'progression' ? (
+          <>
+            {/* Phase 3: Interactive Progression Timeline & Transport */}
+            <section>
+              <ProgressionTimeline />
+            </section>
 
-        {/* Real-Time Note Inspector HUD */}
-        <section>
-          <NoteInspector />
-        </section>
+            {/* Phase 3: Harmonic Context & Soloing Roadmap HUD */}
+            <section>
+              <HarmonicContextHUD />
+            </section>
+          </>
+        ) : (
+          <>
+            {/* Phase 2: Static Key, Scale & Overlay Controls */}
+            <section className="flex flex-col gap-3.5 bg-zinc-950/60 border border-zinc-800/80 p-4 sm:p-5 rounded-2xl shadow-xl shadow-black/50">
+              <KeySelector />
+              <ScaleChordPicker />
+              <OverlayControls />
+              <TuningSelector />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
+                <DisplayModeToggle />
+                <FretboardSettings />
+              </div>
+            </section>
 
-        {/* 24-Fret SVG Fretboard Canvas Container (Target for Task 2.2) */}
+            {/* Audio Engine, Arpeggiator & Tonic Drone Bar */}
+            <section>
+              <PlaybackBar />
+            </section>
+
+            {/* Real-Time Note Inspector HUD */}
+            <section>
+              <NoteInspector />
+            </section>
+          </>
+        )}
+
+        {/* 24-Fret Parallel SVG Fretboard Component */}
         <section className="relative flex flex-col bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl p-6">
           <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80">
             <div className="flex items-center gap-2">
@@ -94,3 +159,4 @@ export default function Home() {
     </main>
   );
 }
+

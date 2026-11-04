@@ -99,7 +99,9 @@
 | **`TASK-2.5`** | Tone.js WebAudio Pluck & Arpeggiator Engine | 2026-11-03 | Build Clean (0 err) | `frontend/src/lib/audio/soundEngine.ts`, `PlaybackBar.tsx` (Scale and arpeggio sequence runner with synchronized dancing SVG playhead cursor, continuous modal tonic drone pad, natural 35ms pick-sweep strum, electric/acoustic presets) |
 | **`TASK-3.1`** | Deterministic Progression Engine & Harmonic Function Parser | 2026-11-04 | 14/14 `pytest` | `backend/app/theory/progression.py`, `backend/tests/test_progression.py` (Krumhansl-Schmuckler empirical key detection, Roman numeral analysis, guide tones 3 & 7 voice leading, common tone tracking, 4-tier solo scale recommendations) |
 | **`TASK-3.2`** | Curated Master Song Encyclopedia & Custom Progression Parser | 2026-11-04 | 8/8 `pytest` | `backend/app/data/progressions.py`, `backend/tests/test_song_library.py`, `frontend/src/lib/theory/songLibrary.ts`, `frontend/src/lib/theory/progressionParser.ts` (16 curated songs across 4 genres: Rock, Blues, Jazz, Pop; custom pipe/hyphen/Roman numeral parser; bar beat sub-divisions) |
-| **Total** | **Phase 1, Phase 2 & Phase 3 (Core + Studio + Progression Engine + Song Encyclopedia)** | | **93/93 Passing (100%) + Clean Next Build** | Complete deterministic theory engine, 24-fret SVG instrument, visual soloing overlays, ear-training WebAudio engine, and 16-song progression encyclopedia |
+| **`TASK-3.3`** | Interactive Progression Timeline & Harmonic Context HUD | 2026-11-04 | Build Clean (0 err) | `frontend/src/components/progression/ProgressionTimeline.tsx`, `HarmonicContextHUD.tsx`, `CustomProgressionModal.tsx`, `useTheoryStore.ts` (Interactive measure strip with click-to-freeze scrubbing, beat LEDs, transport controls, 4-tier 1-click scale applicator, voice-leading anticipation window, custom chord syntax modal) |
+| **Total** | **Phase 1, Phase 2 & Phase 3 (Core + Studio + Progression Flight-Path)** | | **93/93 Passing (100%) + Clean Next Build** | Complete deterministic theory engine, 24-fret SVG instrument, visual soloing overlays, ear-training WebAudio engine, 16-song progression encyclopedia, and real-time interactive timeline HUD |
+
 
 
 
