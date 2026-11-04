@@ -5,16 +5,26 @@
  */
 
 import { TonePreset } from '@/types/theory';
+import { getGuitarChordVoicing, getBassPitch } from './voicingMath';
 
 class SoundEngine {
   private tone: typeof import('tone') | null = null;
   private synth: any = null;
   private polySynth: any = null;
   private droneSynth: any = null;
+  private bassSynth: any = null;
+  private drumSynth: any = null;
+  private kickSynth: any = null;
+  private chimeSynth: any = null;
   private reverb: any = null;
   private isInitialized = false;
   private isMuted = false;
   private currentDroneKey: string | null = null;
+
+  // Backing Track Individual Stems Mute State
+  private backingChordsMuted = false;
+  private backingBassMuted = false;
+  private backingDrumsMuted = false;
 
   public async initialize(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
@@ -75,6 +85,61 @@ class SoundEngine {
         },
       }).connect(droneFilter);
       this.droneSynth.volume.value = -16;
+
+      // Warm Electric Bass Synthesizer for Downbeats & Walking Bass
+      const bassFilter = new this.tone.Filter({
+        frequency: 340,
+        type: 'lowpass',
+        rolloff: -24,
+      }).connect(this.reverb);
+
+      this.bassSynth = new this.tone.MonoSynth({
+        oscillator: { type: 'triangle' },
+        envelope: {
+          attack: 0.02,
+          decay: 0.7,
+          sustain: 0.4,
+          release: 0.8,
+        },
+      }).connect(bassFilter);
+      this.bassSynth.volume.value = -4;
+
+      // Acoustic Hi-Hat / Timing Pulse Synth
+      this.drumSynth = new this.tone.NoiseSynth({
+        noise: { type: 'white' },
+        envelope: {
+          attack: 0.001,
+          decay: 0.045,
+          sustain: 0,
+        },
+      }).connect(this.reverb);
+      this.drumSynth.volume.value = -18;
+
+      // Deep Punchy Downbeat Kick Drum Synth
+      this.kickSynth = new this.tone.MembraneSynth({
+        pitchDecay: 0.045,
+        octaves: 3.5,
+        oscillator: { type: 'sine' },
+        envelope: {
+          attack: 0.001,
+          decay: 0.32,
+          sustain: 0.01,
+          release: 0.4,
+        },
+      }).connect(this.reverb);
+      this.kickSynth.volume.value = -9;
+
+      // Practice Game Bright Chime Synthesizer
+      this.chimeSynth = new this.tone.PolySynth(this.tone.Synth, {
+        oscillator: { type: 'sine' },
+        envelope: {
+          attack: 0.005,
+          decay: 0.8,
+          sustain: 0.1,
+          release: 0.9,
+        },
+      }).connect(this.reverb);
+      this.chimeSynth.volume.value = -6;
 
       this.isInitialized = true;
       return true;
@@ -224,6 +289,114 @@ class SoundEngine {
 
     if (this.tone.Transport.state !== 'started') {
       this.tone.Transport.start();
+    }
+  }
+
+  public setBackingMix(chordsMuted: boolean, bassMuted: boolean, drumsMuted: boolean): void {
+    this.backingChordsMuted = chordsMuted;
+    this.backingBassMuted = bassMuted;
+    this.backingDrumsMuted = drumsMuted;
+  }
+
+  // Play a single beat tick of the progression backing band
+  public playCompingBeat(chordSymbol: string, beat: number, totalBeats = 4): void {
+    if (this.isMuted) return;
+    if (!this.isInitialized) {
+      this.initialize();
+      return;
+    }
+    if (!this.tone) return;
+
+    try {
+      const now = this.tone.now();
+
+      // 1. Drum Groove & Timing Pulse
+      if (!this.backingDrumsMuted) {
+        if (beat === 1) {
+          if (this.kickSynth) this.kickSynth.triggerAttackRelease('C1', '8n', now);
+          if (this.drumSynth) this.drumSynth.triggerAttackRelease('16n', now);
+        } else if (beat === 3 && totalBeats >= 4) {
+          if (this.kickSynth) this.kickSynth.triggerAttackRelease('G0', '8n', now);
+          if (this.drumSynth) this.drumSynth.triggerAttackRelease('16n', now);
+        } else {
+          // Beats 2 & 4: Crisper hi-hat snap
+          if (this.drumSynth) this.drumSynth.triggerAttackRelease('8n', now);
+        }
+      }
+
+      // 2. Electric Bassline
+      if (!this.backingBassMuted && this.bassSynth) {
+        if (beat === 1) {
+          // Fundamental root downbeat
+          const bassPitch = getBassPitch(chordSymbol, false);
+          this.bassSynth.triggerAttackRelease(bassPitch, '4n', now);
+        } else if (beat === 3 && totalBeats >= 4) {
+          // Walking fifth on beat 3
+          const fifthPitch = getBassPitch(chordSymbol, true);
+          this.bassSynth.triggerAttackRelease(fifthPitch, '4n', now);
+        }
+      }
+
+      // 3. Rhythm Guitar Chord Strum Comping
+      if (!this.backingChordsMuted && this.polySynth) {
+        const voicing = getGuitarChordVoicing(chordSymbol);
+        if (beat === 1) {
+          // Downbeat full chord strum with natural 28ms pick sweep
+          voicing.forEach((pitch, i) => {
+            this.polySynth.triggerAttackRelease(pitch, '2n', now + i * 0.028);
+          });
+        } else if (beat === 2 && totalBeats >= 4) {
+          // Light offbeat chord chop
+          voicing.slice(1).forEach((pitch, i) => {
+            this.polySynth.triggerAttackRelease(pitch, '8n', now + i * 0.015);
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error playing comping beat:', err);
+    }
+  }
+
+  // Play practice drill reward chime
+  public playRewardChime(isMajorBonus = false): void {
+    if (this.isMuted) return;
+    if (!this.isInitialized) {
+      this.initialize();
+      return;
+    }
+    if (!this.tone || !this.chimeSynth) return;
+
+    try {
+      const now = this.tone.now();
+      if (isMajorBonus) {
+        // High sparkling guide tone resolution triad
+        this.chimeSynth.triggerAttackRelease('E5', '8n', now);
+        this.chimeSynth.triggerAttackRelease('G#5', '8n', now + 0.08);
+        this.chimeSynth.triggerAttackRelease('B5', '4n', now + 0.16);
+      } else {
+        // Crisp dual chime
+        this.chimeSynth.triggerAttackRelease('A4', '8n', now);
+        this.chimeSynth.triggerAttackRelease('E5', '4n', now + 0.09);
+      }
+    } catch (err) {
+      // Safe catch
+    }
+  }
+
+  public stopComping(): void {
+    if (this.bassSynth) {
+      try {
+        this.bassSynth.triggerRelease();
+      } catch (err) {
+        // Safe catch
+      }
+    }
+    if (this.polySynth) {
+      try {
+        this.polySynth.releaseAll();
+      } catch (err) {
+        // Safe catch
+      }
     }
   }
 
