@@ -19,10 +19,12 @@ import {
   PlayDirection,
   SongProgression,
   ProgressionAnalysisResult,
+  FretCoordinate,
 } from '@/types/theory';
 import { soundEngine } from '@/lib/audio/soundEngine';
 import { CURATED_SONGS } from '@/lib/theory/songLibrary';
 import { analyzeProgressionClient } from '@/lib/theory/progressionParser';
+import { noteToPitchClass } from '@/lib/theory/pitchMath';
 
 export interface TheoryState {
   // Studio View Mode (Phase 2 Explorer vs Phase 3 Song Progression)
@@ -44,6 +46,32 @@ export interface TheoryState {
   isProgressionLooping: boolean;
   progressionBpm: number;
   isCustomModalOpen: boolean;
+
+  // Phase 3 Fretboard Voice-Leading Overlays
+  showGuideToneHalos: boolean;
+  showCommonToneBadges: boolean;
+  showVoiceLeadingVectors: boolean;
+  staticPositionFret: number | null;
+
+  // Phase 3 Multi-Voice Backing Track & Comping Mixer
+  backingChordsMuted: boolean;
+  backingBassMuted: boolean;
+  backingDrumsMuted: boolean;
+  setBackingChordsMuted: (muted: boolean) => void;
+  setBackingBassMuted: (muted: boolean) => void;
+  setBackingDrumsMuted: (muted: boolean) => void;
+
+  // Phase 3 "Target the 3rd" Practice Game
+  targetDrillActive: boolean;
+  targetDrillScore: number;
+  targetDrillStreak: number;
+  targetDrillFeedback: {
+    message: string;
+    type: 'perfect' | 'great' | 'anchor' | 'outside';
+  } | null;
+  setTargetDrillActive: (active: boolean) => void;
+  resetTargetDrill: () => void;
+  evaluateDrillClick: (coord: FretCoordinate) => void;
 
   // Visual & Fretboard Display Modes
   displayMode: DisplayMode;
@@ -86,6 +114,10 @@ export interface TheoryState {
   nextBar: () => void;
   prevBar: () => void;
   applyScaleFromHud: (scaleName: string) => void;
+  setShowGuideToneHalos: (show: boolean) => void;
+  setShowCommonToneBadges: (show: boolean) => void;
+  setShowVoiceLeadingVectors: (show: boolean) => void;
+  setStaticPositionFret: (fret: number | null) => void;
 
   setKey: (key: NoteName) => void;
 
@@ -136,6 +168,26 @@ const DEFAULT_STATE = {
   isProgressionLooping: true,
   progressionBpm: CURATED_SONGS[0].default_tempo,
   isCustomModalOpen: false,
+
+  // Phase 3 Fretboard Voice-Leading Overlays
+  showGuideToneHalos: true,
+  showCommonToneBadges: true,
+  showVoiceLeadingVectors: true,
+  staticPositionFret: null as number | null,
+
+  // Phase 3 Multi-Voice Backing Track Defaults
+  backingChordsMuted: false,
+  backingBassMuted: false,
+  backingDrumsMuted: false,
+
+  // Phase 3 Practice Drill Game Defaults
+  targetDrillActive: false,
+  targetDrillScore: 0,
+  targetDrillStreak: 0,
+  targetDrillFeedback: null as {
+    message: string;
+    type: 'perfect' | 'great' | 'anchor' | 'outside';
+  } | null,
 
   currentKey: 'A' as NoteName,
   tuning: 'Standard' as TuningName,
@@ -294,6 +346,118 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
       activeChord: null,
     });
   },
+
+  setShowGuideToneHalos: (showGuideToneHalos: boolean) => set({ showGuideToneHalos }),
+  setShowCommonToneBadges: (showCommonToneBadges: boolean) => set({ showCommonToneBadges }),
+  setShowVoiceLeadingVectors: (showVoiceLeadingVectors: boolean) => set({ showVoiceLeadingVectors }),
+  setStaticPositionFret: (staticPositionFret: number | null) => set({ staticPositionFret }),
+
+  setBackingChordsMuted: (muted: boolean) => {
+    set({ backingChordsMuted: muted });
+    soundEngine.setBackingMix(muted, get().backingBassMuted, get().backingDrumsMuted);
+  },
+  setBackingBassMuted: (muted: boolean) => {
+    set({ backingBassMuted: muted });
+    soundEngine.setBackingMix(get().backingChordsMuted, muted, get().backingDrumsMuted);
+  },
+  setBackingDrumsMuted: (muted: boolean) => {
+    set({ backingDrumsMuted: muted });
+    soundEngine.setBackingMix(get().backingChordsMuted, get().backingBassMuted, muted);
+  },
+
+  setTargetDrillActive: (active: boolean) => {
+    set({
+      targetDrillActive: active,
+      targetDrillFeedback: active
+        ? {
+            message: '🎯 Drill started! Target the 3rd or 7th of the current chord on the fretboard!',
+            type: 'great',
+          }
+        : null,
+    });
+  },
+
+  resetTargetDrill: () => {
+    set({ targetDrillScore: 0, targetDrillStreak: 0, targetDrillFeedback: null });
+  },
+
+  evaluateDrillClick: (coord: FretCoordinate) => {
+    const {
+      targetDrillActive,
+      progressionAnalysis,
+      currentChordIndex,
+      targetDrillScore,
+      targetDrillStreak,
+    } = get();
+    if (!targetDrillActive || !progressionAnalysis) return;
+
+    const currentChord = progressionAnalysis.chords[currentChordIndex];
+    if (!currentChord) return;
+
+    const clickedPc = noteToPitchClass(coord.note);
+    const rootPc = noteToPitchClass(currentChord.root);
+    const diff = (clickedPc - rootPc + 12) % 12;
+
+    const isThird = diff === 3 || diff === 4;
+    const isSeventh = diff === 10 || diff === 11;
+    const isRoot = diff === 0;
+    const isFifth = diff === 7;
+
+    if (isThird) {
+      soundEngine.playRewardChime(true);
+      const newScore = targetDrillScore + 100;
+      const newStreak = targetDrillStreak + 1;
+      set({
+        targetDrillScore: newScore,
+        targetDrillStreak: newStreak,
+        targetDrillFeedback: {
+          message: `🎯 PERFECT GUIDE TONE! You nailed the 3rd (${coord.note}) of ${currentChord.symbol}! (+100 pts)`,
+          type: 'perfect',
+        },
+      });
+    } else if (isSeventh) {
+      soundEngine.playRewardChime(false);
+      const newScore = targetDrillScore + 85;
+      const newStreak = targetDrillStreak + 1;
+      set({
+        targetDrillScore: newScore,
+        targetDrillStreak: newStreak,
+        targetDrillFeedback: {
+          message: `🔥 GREAT 7th COLOR! You targeted the 7th (${coord.note}) of ${currentChord.symbol}! (+85 pts)`,
+          type: 'great',
+        },
+      });
+    } else if (isRoot) {
+      const newScore = targetDrillScore + 40;
+      set({
+        targetDrillScore: newScore,
+        targetDrillFeedback: {
+          message: `⚓ Solid Root Anchor (${coord.note}). Try targeting the 3rd for more melodic voice leading! (+40 pts)`,
+          type: 'anchor',
+        },
+      });
+    } else if (isFifth) {
+      const newScore = targetDrillScore + 30;
+      set({
+        targetDrillScore: newScore,
+        targetDrillFeedback: {
+          message: `🎸 Fifth (${coord.note}) hit. Stable consonance! (+30 pts)`,
+          type: 'anchor',
+        },
+      });
+    } else {
+      set({
+        targetDrillStreak: 0,
+        targetDrillFeedback: {
+          message: `⚡ Passing note (${coord.note}). Slide into the 3rd (${
+            currentChord.guide_tones[0] || 'guide tone'
+          })!`,
+          type: 'outside',
+        },
+      });
+    }
+  },
+
 
 
   setKey: (key: NoteName) => {
