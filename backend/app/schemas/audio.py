@@ -88,3 +88,59 @@ class TranscribedProgressionResponse(BaseModel):
     raw_chords: List[TranscribedChordEvent] = Field(default_factory=list)
     total_duration: float = Field(...)
     inference_device: str = Field(default="cpu")
+
+
+
+class QuantizedNoteEvent(BaseModel):
+    """Note event aligned to a musical rhythmic grid."""
+    original_start_time: float = Field(..., description="Unquantized start time in seconds")
+    start_time: float = Field(..., description="Quantized start time in seconds")
+    end_time: float = Field(..., description="Quantized end time in seconds")
+    duration: float = Field(..., description="Quantized duration in seconds")
+    measure: int = Field(default=1, ge=1, description="1-indexed measure number")
+    beat_in_measure: float = Field(default=1.0, ge=1.0, description="1.0 to 4.99 in 4/4")
+    total_beats: float = Field(default=0.0, description="Total beats from measure 1 beat 1")
+    grid_slot: int = Field(default=0, description="Zero-indexed slot within the measure (e.g. 0-15 for 16th grid)")
+    rhythmic_value: str = Field(default="1/8", description="Musical note value name e.g. 1/16, 1/8, 1/4")
+    pitch_midi: int = Field(..., ge=21, le=108)
+    pitch_name: str = Field(..., description="Note name with octave e.g. E4")
+    pitch_class: str = Field(..., description="Pitch class e.g. E")
+    articulation: GuitarArticulationEnum = Field(default=GuitarArticulationEnum.NORMAL)
+    tab_position: Optional[GuitarTabPosition] = Field(default=None)
+
+
+class QuantizeResult(BaseModel):
+    """Result of rhythmic quantization across a sequence of transcribed notes."""
+    bpm: float = Field(..., description="Beats per minute used for quantization")
+    grid: str = Field(default="1/16", description="Subdivision grid: 1/4, 1/8, 1/16, 1/32, 1/8T, 1/16T")
+    time_signature: str = Field(default="4/4")
+    slots_per_measure: int = Field(default=16, description="Grid subdivision slots per measure")
+    total_measures: int = Field(default=1, description="Total number of measures spanned")
+    notes: List[QuantizedNoteEvent] = Field(default_factory=list)
+
+
+class AsciiTabExportRequest(BaseModel):
+    """Request payload to render standard 6-line ASCII guitar tablature."""
+    notes: List[TranscribedNoteEvent] = Field(..., description="Transcribed guitar notes with tab positions")
+    bpm: float = Field(default=120.0, ge=30.0, le=300.0)
+    grid: str = Field(default="auto", description="Subdivision grid: 'auto', '1/8', '1/16'")
+    title: Optional[str] = Field(default="Guitar Solo Transcription")
+    key: Optional[str] = Field(default=None)
+    measures_per_line: int = Field(default=2, ge=1, le=4, description="Measures per printed staff block")
+
+
+class AsciiTabExportResponse(BaseModel):
+    """Response containing standard ASCII tablature text."""
+    ascii_tab: str = Field(..., description="Standard 6-line ASCII guitar tablature")
+    total_measures: int = Field(...)
+    quantization_grid: str = Field(...)
+    bpm: float = Field(...)
+
+
+class MidiExportRequest(BaseModel):
+    """Request payload to generate a standard MIDI file (.mid)."""
+    notes: List[TranscribedNoteEvent] = Field(..., description="Transcribed guitar notes with tab positions")
+    bpm: float = Field(default=120.0, ge=30.0, le=300.0)
+    time_signature: str = Field(default="4/4")
+    track_name: str = Field(default="Guitar Solo")
+    include_pitch_bends: bool = Field(default=True)
