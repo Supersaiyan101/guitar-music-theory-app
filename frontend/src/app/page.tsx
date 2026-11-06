@@ -14,6 +14,8 @@ import { FooterLegend } from '@/components/layout/FooterLegend';
 import { Fretboard } from '@/components/fretboard/Fretboard';
 import { ProgressionTimeline } from '@/components/progression/ProgressionTimeline';
 import { HarmonicContextHUD } from '@/components/progression/HarmonicContextHUD';
+import { GuitarCoachHUD } from '@/components/coach/GuitarCoachHUD';
+import { LickVault } from '@/components/coach/LickVault';
 import { useTheoryStore } from '@/store/useTheoryStore';
 
 export default function Home() {
@@ -89,6 +91,11 @@ export default function Home() {
               <ProgressionTimeline />
             </section>
 
+            {/* Phase 4: AI Guitar Coach & RAG Pedagogy Cockpit */}
+            <section>
+              <GuitarCoachHUD />
+            </section>
+
             {/* Phase 3: Harmonic Context & Soloing Roadmap HUD */}
             <section>
               <HarmonicContextHUD />
@@ -156,6 +163,9 @@ export default function Home() {
         {/* Harmonic Color Legend */}
         <FooterLegend />
       </div>
+
+      {/* Phase 4: Personal Lick Vault Modal Drawer */}
+      <LickVault />
     </main>
   );
 }

@@ -46,6 +46,8 @@ export const ProgressionTimeline: React.FC = () => {
     targetDrillFeedback,
     setTargetDrillActive,
     resetTargetDrill,
+    isCoachOpen,
+    setIsCoachOpen,
   } = useTheoryStore();
 
   const timelineContainerRef = useRef<HTMLDivElement>(null);
@@ -221,6 +223,17 @@ export const ProgressionTimeline: React.FC = () => {
             className="px-3 py-1.5 rounded-xl text-xs font-bold bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-cyan-500/50 text-cyan-400 transition-all shadow-sm flex items-center gap-1.5"
           >
             <span>✍️</span> Type Custom Progression
+          </button>
+
+          <button
+            onClick={() => setIsCoachOpen(!isCoachOpen)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all shadow-sm flex items-center gap-1.5 ${
+              isCoachOpen
+                ? 'bg-purple-950/70 border-purple-500/60 text-purple-300 ring-1 ring-purple-500/30'
+                : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 hover:border-purple-500/50 text-purple-400'
+            }`}
+          >
+            <span>🎙️</span> AI Coach
           </button>
         </div>
 
