@@ -25,7 +25,9 @@
 | 🟢 **COMPLETE** | **`TASK-3.3`** | **Progression Timeline & Harmonic HUD** | Beat LEDs, transport controls, 4-tier scale applicator, anticipation window, custom chord modal |
 | 🟢 **COMPLETE** | **`TASK-3.4`** | **Dynamic Voice-Leading Spotlight & Shift Vectors** | Guide tone halos (3rd gold, 7th purple), 💎 common tones, ½ & whole step shift arcs, 5-fret hand lock |
 | 🟢 **COMPLETE** | **`TASK-3.5`** | **Backing Comping Engine & Target Practice Drill** | Multi-voice backing band (rhythm, bass, drums), stem mixer, "Target the 3rd" gamified practice drill |
-| 🟡 **NEXT** | **`TASK-4.1`** | **Qdrant Vector Pipeline & Theory Embeddings** | FastEmbed local embeddings, Qdrant collection, theory chunking schema & indexing script |
+| 🟢 **COMPLETE** | **`TASK-4.1`** | **Local Qdrant Vector Pipeline & Theory Knowledge Base** | FastEmbed local ONNX CPU/GPU embeddings, Qdrant collection, 10 guitar harmonic unlocks, Tier-2 instant RAM cache (< 1ms), offline indexer |
+| 🟡 **NEXT** | **`TASK-4.2`** | **Guitar Teacher Agent Personas & RAG Query Endpoint** | Pedagogical personas (Blues/Rock, Jazz changes, Hendrix soul), `/api/coach/explain` streaming endpoint, 3-step practice drills |
+
 
 ---
 
@@ -84,6 +86,13 @@
 7. **`get_octave_coordinates(string, fret)`**: Octave GPS identifying the 4 Wes Montgomery / Jimi Hendrix octave shapes (6-to-4, 5-to-3, 4-to-2, 3-to-1) and horizontal 12-fret octaves.
 8. **`get_static_position_progression_shapes(chords, target_fret)`**: Pro voice-leading tool calculating the optimal CAGED shape for every chord in a progression to play over changes in a single hand position without jumping across the neck.
 
+### `TASK-4.1` Refinements (Commits: `985ae52`, `1d7d174`, `afa850c`, `73d6d05`, `dd176ab`, `3d4c5e8`, `54f273b`, `2e38e55`, `252549d`)
+1. **Structured Theory Chunking Schema (`GuitarTheoryChunk`, `InstantCard`)**: Standardized lesson blueprints with harmonic classification, emotional vibe, single-sentence hero moves, exact degree motions, CAGED anchors, and famous twin tracks.
+2. **10 Master Guitar Harmonic Unlocks (`data/raw/guitar_theory_kb.json`)**: Curated lessons covering Minor iv modal interchange (*Creep*), Secondary Dominants ($V/vi$ in *Hotel California*), Tritone substitutions (*Fly Me to the Moon*), Blues $I7 \rightarrow IV7$ Major/Minor shift (*B.B. King / SRV*), Hendrix/Mayer hammer-on embellishments (*Little Wing*), Backdoor $\flat VII7 \rightarrow I$ resolutions (*Stevie Wonder*), $ii-V-I$ guide tone cascades (*Autumn Leaves*), Superimposed Triads (*Eric Johnson*), Symmetrical Diminished 7th passing chords (*Django*), and the Dorian vs Aeolian raised 6th switch (*Santana*).
+3. **FastEmbed Local Embedding Service (`TheoryEmbedder`)**: Ultra-fast local ONNX CPU/GPU runtime (`BAAI/bge-small-en-v1.5`, 384 dimensions) with 100% offline capability, zero external network calls, and zero API costs.
+4. **Local Qdrant Vector Store & Instant RAM Cache (`TheoryVectorStore`)**: Embedded disk persistence (`data/qdrant_db`) coupled with an in-memory hot cache for Tier-2 instant lookups ($< 0.5\text{ms}$) by Roman numeral, chord symbol, or category, plus sub-10ms semantic vector queries ($5.04\text{ms}$ benchmark).
+5. **Offline Indexing Pipeline (`index_theory_kb.py`)**: One-command ingestion script reading raw pedagogy, generating embeddings, upserting to Qdrant, and generating `data/processed/index_summary.json`.
+
 ---
 
 ## ✅ Completed Tasks Registry
@@ -107,7 +116,9 @@
 | **`TASK-3.3`** | Interactive Progression Timeline & Harmonic Context HUD | 2026-11-04 | Build Clean (0 err) | `frontend/src/components/progression/ProgressionTimeline.tsx`, `HarmonicContextHUD.tsx`, `CustomProgressionModal.tsx`, `useTheoryStore.ts` (Interactive measure strip with click-to-freeze scrubbing, beat LEDs, transport controls, 4-tier 1-click scale applicator, voice-leading anticipation window, custom chord syntax modal) |
 | **`TASK-3.4`** | Dynamic Fretboard Voice-Leading Spotlight & Vector Overlays | 2026-11-05 | Build Clean (0 err) | `frontend/src/components/fretboard/Fretboard.tsx`, `ProgressionTimeline.tsx`, `useTheoryStore.ts` (Guide tone halos for 3rd and 7th with badges; common tone pivot badges 💎; dynamic scalar/voice shift vector arcs with half/whole-step arrows; static hand-lock 5-fret box with outside dimming and zoom focus) |
 | **`TASK-3.5`** | Tone.js Multi-Voice Backing Comping Engine & Practice Drill Game | 2026-11-05 | Build Clean (0 err) | `frontend/src/lib/audio/soundEngine.ts`, `voicingMath.ts`, `ProgressionTimeline.tsx`, `useTheoryStore.ts` (Multi-voice WebAudio backing band with rhythm guitar arpeggiated comping, electric bass root/fifth walking downbeats, and hi-hat/kick metronome groove synchronized to playhead; individual stem mixer; interactive "Target the 3rd" practice drill game with score, streak & instant rewarding feedback) |
-| **Total** | **Phase 1, Phase 2 & Phase 3 (Core + Studio + Progression Flight-Path & Backing Band)** | | **93/93 Passing (100%) + Clean Next Build** | Complete deterministic theory engine, 24-fret SVG instrument, visual soloing overlays, ear-training WebAudio engine, 16-song progression encyclopedia, interactive timeline HUD, real-time voice-leading spotlight overlays, multi-voice backing comping band, and target tone drill practice game |
+| **`TASK-4.1`** | Local Qdrant Vector Pipeline & Guitar Theory Knowledge Base | 2026-11-06 | 11/11 `pytest` (104 total) | `backend/app/schemas/rag.py`, `backend/app/rag/embedder.py`, `backend/app/rag/vector_store.py`, `data/raw/guitar_theory_kb.json`, `backend/scripts/index_theory_kb.py`, `data/processed/index_summary.json` (FastEmbed 384-dim local ONNX embeddings, Qdrant embedded storage `data/qdrant_db`, 10 structured guitar harmonic unlocks, Tier-2 instant RAM cache for < 1ms chord lookups, 5.04ms semantic search latency, 100% offline & zero API costs) |
+| **Total** | **Phase 1, Phase 2, Phase 3 & Task 4.1 (Core + Studio + Progression Flight-Path + Vector RAG KB)** | | **104/104 Passing (100%) + Clean Next Build** | Complete deterministic theory engine, 24-fret SVG instrument, visual soloing overlays, ear-training WebAudio engine, 16-song progression encyclopedia, interactive timeline HUD, dynamic voice-leading spotlight, multi-voice backing band, target practice game, and local Qdrant vector retrieval engine |
+
 
 
 
