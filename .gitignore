@@ -54,6 +54,7 @@ Thumbs.db
 # Vector & Database Storage
 data/qdrant_db/
 *.sqlite3
+data/models/*.onnx
 
 Thumbs.db
 
