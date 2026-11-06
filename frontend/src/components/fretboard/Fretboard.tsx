@@ -56,6 +56,7 @@ export const Fretboard: React.FC = () => {
     staticPositionFret,
     targetDrillActive,
     evaluateDrillClick,
+    highlightedCoachTarget,
   } = useTheoryStore();
 
   const [hoveredCell, setHoveredCell] = useState<{ stringNumber: number; fretNumber: number } | null>(null);
@@ -257,7 +258,12 @@ export const Fretboard: React.FC = () => {
     }
     if (fretRange === 'box_focus') {
       let span: [number, number] = [4, 10];
-      if (staticPositionFret !== null) {
+      if (highlightedCoachTarget && highlightedCoachTarget.fret > 0) {
+        span = [
+          Math.max(1, highlightedCoachTarget.fret - 2),
+          Math.min(24, highlightedCoachTarget.fret + 2),
+        ];
+      } else if (staticPositionFret !== null) {
         span = [staticPositionFret, Math.min(24, staticPositionFret + 4)];
       } else if (activeOverlay === 'caged' && cagedData[cagedShape]) {
         span = cagedData[cagedShape].fretSpan;
@@ -1426,6 +1432,54 @@ export const Fretboard: React.FC = () => {
                         </text>
                       </g>
                     )}
+
+                    {/* Coach Target Spotlight Pulsing Halo & Badge */}
+                    {highlightedCoachTarget &&
+                      highlightedCoachTarget.string === strNum &&
+                      highlightedCoachTarget.fret === coord.fretNumber && (
+                        <g className="coach-target-spotlight">
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r={22}
+                            fill="rgba(56, 189, 248, 0.28)"
+                            stroke="#38bdf8"
+                            strokeWidth={2.4}
+                            strokeDasharray="4, 3"
+                            className="animate-spin-slow"
+                          />
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r={26}
+                            fill="none"
+                            stroke="#0284c7"
+                            strokeWidth={1}
+                            className="animate-ping opacity-75"
+                          />
+                          <rect
+                            x={x - 26}
+                            y={y - 25}
+                            width={52}
+                            height={13}
+                            rx={3}
+                            fill="#082f49"
+                            stroke="#38bdf8"
+                            strokeWidth={1}
+                            className="shadow-lg"
+                          />
+                          <text
+                            x={x}
+                            y={y - 15.5}
+                            textAnchor="middle"
+                            className={`text-[6.5px] font-black fill-sky-200 pointer-events-none uppercase tracking-wider ${
+                              handedness === 'left' ? 'scale-x-[-1]' : ''
+                            }`}
+                          >
+                            🎯 Coach Target
+                          </text>
+                        </g>
+                      )}
 
                     {/* Common Tone Pivot Badge */}
                     {isCommonTone && (
