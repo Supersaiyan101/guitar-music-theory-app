@@ -25,6 +25,28 @@ import { soundEngine } from '@/lib/audio/soundEngine';
 import { CURATED_SONGS } from '@/lib/theory/songLibrary';
 import { analyzeProgressionClient } from '@/lib/theory/progressionParser';
 import { noteToPitchClass } from '@/lib/theory/pitchMath';
+import {
+  TeacherPersonaEnum,
+  InstantCard,
+  CoachExplainResponse,
+  FretTargetSuggestion,
+} from '@/lib/api/coachClient';
+
+export interface SavedLick {
+  id: string;
+  title: string;
+  progression: string[];
+  activeChord: string;
+  romanNumeral: string;
+  key: string;
+  targetNote: string;
+  targetCoordinates: { string: number; fret: number }[];
+  heroMove: string;
+  theMusicalWhy: string;
+  persona: TeacherPersonaEnum;
+  savedAt: string;
+  userNotes?: string;
+}
 
 export interface TheoryState {
   // Studio View Mode (Phase 2 Explorer vs Phase 3 Song Progression)
@@ -149,6 +171,34 @@ export interface TheoryState {
   setActivePlayingPin: (pin: { stringNumber: number; fretNumber: number } | null) => void;
   playFretAudio: (pitchWithOctave: string) => Promise<void>;
   resetDefaults: () => void;
+
+  // Phase 4 AI Guitar Coach & Lick Vault
+  isCoachOpen: boolean;
+  coachPersona: TeacherPersonaEnum;
+  coachInstantCard: InstantCard | null;
+  coachResponse: CoachExplainResponse | null;
+  isCoachLoading: boolean;
+  isCoachStreaming: boolean;
+  streamingText: string;
+  highlightedCoachTarget: { string: number; fret: number; note: string } | null;
+  activeDrillStepIndex: number;
+  savedLicks: SavedLick[];
+  isLickVaultOpen: boolean;
+
+  setIsCoachOpen: (open: boolean) => void;
+  setCoachPersona: (persona: TeacherPersonaEnum) => void;
+  setCoachInstantCard: (card: InstantCard | null) => void;
+  setCoachResponse: (resp: CoachExplainResponse | null) => void;
+  setIsCoachLoading: (loading: boolean) => void;
+  setIsCoachStreaming: (streaming: boolean) => void;
+  setStreamingText: (text: string) => void;
+  appendStreamingToken: (token: string) => void;
+  setHighlightedCoachTarget: (target: { string: number; fret: number; note: string } | null) => void;
+  setActiveDrillStepIndex: (index: number) => void;
+  saveCurrentLick: (userNotes?: string) => void;
+  removeSavedLick: (lickId: string) => void;
+  loadSavedLick: (lick: SavedLick) => void;
+  setIsLickVaultOpen: (open: boolean) => void;
 }
 
 const DEFAULT_STATE = {
@@ -215,6 +265,19 @@ const DEFAULT_STATE = {
   tonePreset: 'electric_clean' as TonePreset,
   playDirection: 'ascending' as PlayDirection,
   activePlayingPin: null as { stringNumber: number; fretNumber: number } | null,
+
+  // Phase 4 Coach & Lick Vault Defaults
+  isCoachOpen: false,
+  coachPersona: 'blues_rock' as TeacherPersonaEnum,
+  coachInstantCard: null as InstantCard | null,
+  coachResponse: null as CoachExplainResponse | null,
+  isCoachLoading: false,
+  isCoachStreaming: false,
+  streamingText: '',
+  highlightedCoachTarget: null as { string: number; fret: number; note: string } | null,
+  activeDrillStepIndex: 0,
+  savedLicks: [] as SavedLick[],
+  isLickVaultOpen: false,
 };
 
 export const useTheoryStore = create<TheoryState>((set, get) => ({
@@ -556,6 +619,71 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
     await soundEngine.playNote(pitchWithOctave);
     if (!get().audioReady) {
       set({ audioReady: true });
+    }
+  },
+
+  // Phase 4 Coach & Lick Vault Actions
+  setIsCoachOpen: (isCoachOpen: boolean) => set({ isCoachOpen }),
+  setCoachPersona: (coachPersona: TeacherPersonaEnum) => set({ coachPersona }),
+  setCoachInstantCard: (coachInstantCard: InstantCard | null) => set({ coachInstantCard }),
+  setCoachResponse: (coachResponse: CoachExplainResponse | null) =>
+    set({ coachResponse, streamingText: coachResponse?.the_musical_why || '' }),
+  setIsCoachLoading: (isCoachLoading: boolean) => set({ isCoachLoading }),
+  setIsCoachStreaming: (isCoachStreaming: boolean) => set({ isCoachStreaming }),
+  setStreamingText: (streamingText: string) => set({ streamingText }),
+  appendStreamingToken: (token: string) => set((s) => ({ streamingText: s.streamingText + token })),
+  setHighlightedCoachTarget: (highlightedCoachTarget) => set({ highlightedCoachTarget }),
+  setActiveDrillStepIndex: (activeDrillStepIndex: number) => set({ activeDrillStepIndex }),
+  setIsLickVaultOpen: (isLickVaultOpen: boolean) => set({ isLickVaultOpen }),
+
+  saveCurrentLick: (userNotes?: string) => {
+    const s = get();
+    const currentChord = s.activeProgression.chords_sequence[s.currentChordIndex] || 'Chord';
+    const analysis = s.progressionAnalysis?.chords[s.currentChordIndex];
+    const targetNote = s.coachResponse?.target_notes[0]?.note || analysis?.guide_tones[0] || '';
+    const newLick: SavedLick = {
+      id: `lick_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      title: `${currentChord} Target Move (${targetNote || 'Voice-Leading'})`,
+      progression: s.activeProgression.chords_sequence,
+      activeChord: currentChord,
+      romanNumeral: analysis?.roman_numeral || '',
+      key: s.activeProgression.key,
+      targetNote,
+      targetCoordinates: s.coachResponse?.target_notes.map((t) => ({ string: t.string, fret: t.fret })) || [],
+      heroMove: s.coachResponse?.instant_card.hero_move || s.coachInstantCard?.hero_move || '',
+      theMusicalWhy: s.coachResponse?.the_musical_why || '',
+      persona: s.coachPersona,
+      savedAt: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+      userNotes,
+    };
+    const updated = [newLick, ...s.savedLicks];
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('guitar_theory_saved_licks', JSON.stringify(updated));
+      } catch {}
+    }
+    set({ savedLicks: updated });
+  },
+
+  removeSavedLick: (lickId: string) => {
+    const updated = get().savedLicks.filter((l) => l.id !== lickId);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('guitar_theory_saved_licks', JSON.stringify(updated));
+      } catch {}
+    }
+    set({ savedLicks: updated });
+  },
+
+  loadSavedLick: (lick: SavedLick) => {
+    if (lick.targetCoordinates.length > 0) {
+      set({
+        highlightedCoachTarget: {
+          string: lick.targetCoordinates[0].string,
+          fret: lick.targetCoordinates[0].fret,
+          note: lick.targetNote,
+        },
+      });
     }
   },
 
