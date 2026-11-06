@@ -383,6 +383,28 @@ class SoundEngine {
     }
   }
 
+  /**
+   * Plays the two-note voice leading resolution pair (e.g. fromNote -> toNote)
+   * with authentic guitar pluck attack and 380ms delay, training the guitarist's
+   * ear to hear the exact half-step or whole-step shift.
+   */
+  public async playVoiceLeadingResolution(fromPitch: string, toPitch: string): Promise<void> {
+    if (this.isMuted) return;
+    const ready = await this.initialize();
+    if (!ready || !this.tone || !this.synth) return;
+
+    try {
+      const now = this.tone.now();
+      const fromFormatted = /\d/.test(fromPitch) ? fromPitch : `${fromPitch}4`;
+      const toFormatted = /\d/.test(toPitch) ? toPitch : `${toPitch}4`;
+
+      this.synth.triggerAttackRelease(fromFormatted, '4n', now);
+      this.synth.triggerAttackRelease(toFormatted, '2n', now + 0.38);
+    } catch {
+      // Safe catch
+    }
+  }
+
   public stopComping(): void {
     if (this.bassSynth) {
       try {
