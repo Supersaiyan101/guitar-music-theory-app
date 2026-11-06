@@ -16,6 +16,7 @@ import { ProgressionTimeline } from '@/components/progression/ProgressionTimelin
 import { HarmonicContextHUD } from '@/components/progression/HarmonicContextHUD';
 import { GuitarCoachHUD } from '@/components/coach/GuitarCoachHUD';
 import { LickVault } from '@/components/coach/LickVault';
+import { AudioTranscriberModal } from '@/components/audio/AudioTranscriberModal';
 import { useTheoryStore } from '@/store/useTheoryStore';
 
 export default function Home() {
@@ -166,6 +167,9 @@ export default function Home() {
 
       {/* Phase 4: Personal Lick Vault Modal Drawer */}
       <LickVault />
+
+      {/* Phase 6: Audio Transcriber & Ingestion Modal */}
+      <AudioTranscriberModal />
     </main>
   );
 }

@@ -48,6 +48,7 @@ export const ProgressionTimeline: React.FC = () => {
     resetTargetDrill,
     isCoachOpen,
     setIsCoachOpen,
+    setIsAudioModalOpen,
   } = useTheoryStore();
 
   const timelineContainerRef = useRef<HTMLDivElement>(null);
@@ -234,6 +235,13 @@ export const ProgressionTimeline: React.FC = () => {
             }`}
           >
             <span>🎙️</span> AI Coach
+          </button>
+
+          <button
+            onClick={() => setIsAudioModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-950/60 to-purple-950/60 hover:from-sky-900/60 hover:to-purple-900/60 border border-sky-500/40 hover:border-sky-400 text-sky-300 transition-all shadow-sm flex items-center gap-1.5"
+          >
+            <span>⚡</span> Ingest Audio / Tab
           </button>
         </div>
 

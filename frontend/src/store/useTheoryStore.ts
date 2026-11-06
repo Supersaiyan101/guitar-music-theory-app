@@ -68,6 +68,7 @@ export interface TheoryState {
   isProgressionLooping: boolean;
   progressionBpm: number;
   isCustomModalOpen: boolean;
+  isAudioModalOpen: boolean;
 
   // Phase 3 Fretboard Voice-Leading Overlays
   showGuideToneHalos: boolean;
@@ -133,6 +134,7 @@ export interface TheoryState {
   setIsProgressionLooping: (looping: boolean) => void;
   setProgressionBpm: (bpm: number) => void;
   setIsCustomModalOpen: (open: boolean) => void;
+  setIsAudioModalOpen: (open: boolean) => void;
   nextBar: () => void;
   prevBar: () => void;
   applyScaleFromHud: (scaleName: string) => void;
@@ -218,6 +220,7 @@ const DEFAULT_STATE = {
   isProgressionLooping: true,
   progressionBpm: CURATED_SONGS[0].default_tempo,
   isCustomModalOpen: false,
+  isAudioModalOpen: false,
 
   // Phase 3 Fretboard Voice-Leading Overlays
   showGuideToneHalos: true,
@@ -370,6 +373,7 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
   setIsProgressionLooping: (isProgressionLooping: boolean) => set({ isProgressionLooping }),
   setProgressionBpm: (progressionBpm: number) => set({ progressionBpm }),
   setIsCustomModalOpen: (isCustomModalOpen: boolean) => set({ isCustomModalOpen }),
+  setIsAudioModalOpen: (isAudioModalOpen: boolean) => set({ isAudioModalOpen }),
 
   nextBar: () => {
     const { currentBarIndex, activeProgression } = get();
