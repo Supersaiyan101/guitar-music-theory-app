@@ -20,7 +20,12 @@
 | 🟢 **COMPLETE** | **`TASK-2.3`** | **Interactive Note Pins & Scale/Degree Color Engine** | Color coding harmonic functions (Root Crimson, 3rd Blue, 5th Gold, 7th Purple, b5 Orange), scale/chord filtering, Target Chord Tones mode, Ghost notes |
 | 🟢 **COMPLETE** | **`TASK-2.4`** | **Visual Soloing Overlays** | Bounding zones & connectors for CAGED (5 shapes + roots), 3NPS (7 modes), Diagonal Highway, B.B./Albert King boxes, Triads |
 | 🟢 **COMPLETE** | **`TASK-2.5`** | **Tone.js WebAudio Pluck & Arpeggiator Engine** | Interactive scale/arpeggio playback, animated dancing playhead cursor, modal tonic drone pad, natural pick-sweep strum |
-| 🟡 **NEXT** | **`TASK-3.1`** | **Progression Engine & Harmonic Function Parser** | Roman numeral analysis ($I - IV - V$, $ii - V - I$), secondary dominants, modal interchange |
+| 🟢 **COMPLETE** | **`TASK-3.1`** | **Progression Engine & Harmonic Function Parser** | Roman numeral analysis, Krumhansl-Schmuckler key detection, guide tones 3 & 7, scale tiers |
+| 🟢 **COMPLETE** | **`TASK-3.2`** | **Song Encyclopedia & Custom Parser** | 16 curated classic tracks (Rock/Blues/Jazz/Pop), custom chord parser, bar sub-divisions |
+| 🟢 **COMPLETE** | **`TASK-3.3`** | **Progression Timeline & Harmonic HUD** | Beat LEDs, transport controls, 4-tier scale applicator, anticipation window, custom chord modal |
+| 🟢 **COMPLETE** | **`TASK-3.4`** | **Dynamic Voice-Leading Spotlight & Shift Vectors** | Guide tone halos (3rd gold, 7th purple), 💎 common tones, ½ & whole step shift arcs, 5-fret hand lock |
+| 🟢 **COMPLETE** | **`TASK-3.5`** | **Backing Comping Engine & Target Practice Drill** | Multi-voice backing band (rhythm, bass, drums), stem mixer, "Target the 3rd" gamified practice drill |
+| 🟡 **NEXT** | **`TASK-4.1`** | **Qdrant Vector Pipeline & Theory Embeddings** | FastEmbed local embeddings, Qdrant collection, theory chunking schema & indexing script |
 
 ---
 
