@@ -1,7 +1,7 @@
 """Audio ingestion, transcription, and tablature endpoints."""
 
 from typing import Optional
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Response
 from loguru import logger
 
 from backend.app.audio.articulations import enrich_note_articulations
@@ -9,8 +9,16 @@ from backend.app.audio.chord_extractor import build_progression_from_audio_notes
 from backend.app.audio.fret_solver import solve_optimal_guitar_tabs
 from backend.app.audio.model_loader import get_audio_inference_session
 from backend.app.audio.transcriber import get_audio_transcriber
-from backend.app.schemas.audio import TranscribedLickResponse, TranscribedProgressionResponse
-from backend.app.theory.progression import analyze_progression
+from backend.app.audio.quantizer import estimate_tempo_from_onsets
+from backend.app.audio.tab_exporter import export_ascii_tab
+from backend.app.audio.midi_exporter import export_midi_bytes
+from backend.app.schemas.audio import (
+    TranscribedLickResponse,
+    TranscribedProgressionResponse,
+    AsciiTabExportRequest,
+    AsciiTabExportResponse,
+    MidiExportRequest,
+)
 
 router = APIRouter(prefix="/api/audio", tags=["audio"])
 
@@ -66,13 +74,16 @@ async def transcribe_guitar_lick(
             articulated_notes, target_zone_fret=target_zone_fret
         )
 
-        # Step 3: Estimate key and mode from note pitch classes
+        # Step 3: Estimate tempo from onsets
+        detected_bpm = estimate_tempo_from_onsets([n.start_time for n in solved_notes])
+
+        # Step 4: Estimate key and mode from note pitch classes
         unique_pcs = list(dict.fromkeys(n.pitch_class for n in solved_notes))
         estimated_key = unique_pcs[0] if unique_pcs else "A"
         estimated_mode = "minor" if any(n.pitch_class in ["C", "F", "G"] for n in solved_notes) else "major"
 
         return TranscribedLickResponse(
-            detected_bpm=120.0,
+            detected_bpm=detected_bpm,
             detected_key=estimated_key,
             detected_mode=estimated_mode,
             primary_caged_box=caged_box,
@@ -116,3 +127,46 @@ async def transcribe_guitar_progression(
     except Exception as e:
         logger.error(f"Error in transcribe_guitar_progression: {e}")
         raise HTTPException(status_code=500, detail=f"Progression transcription failed: {str(e)}")
+
+
+@router.post("/export-tab-ascii", response_model=AsciiTabExportResponse)
+def export_tab_ascii_endpoint(request: AsciiTabExportRequest):
+    """Generates standard 6-line ASCII guitar tablature from transcribed notes."""
+    try:
+        result = export_ascii_tab(
+            notes=request.notes,
+            bpm=request.bpm,
+            grid=request.grid,
+            title=request.title or "Guitar Solo Transcription",
+            key=request.key,
+            measures_per_line=request.measures_per_line,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error in export_tab_ascii_endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"ASCII tab export failed: {str(e)}")
+
+
+@router.post("/export-midi")
+def export_midi_endpoint(request: MidiExportRequest):
+    """Generates a standard binary Type 0 MIDI file (.mid) from transcribed notes."""
+    try:
+        midi_bytes = export_midi_bytes(
+            notes=request.notes,
+            bpm=request.bpm,
+            time_signature=request.time_signature,
+            track_name=request.track_name,
+            include_pitch_bends=request.include_pitch_bends,
+        )
+        safe_name = "".join(c for c in request.track_name if c.isalnum() or c in ("-", "_")).rstrip() or "guitar_solo"
+        return Response(
+            content=midi_bytes,
+            media_type="audio/midi",
+            headers={
+                "Content-Disposition": f'attachment; filename="{safe_name}.mid"',
+                "Content-Length": str(len(midi_bytes)),
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error in export_midi_endpoint: {e}")
+        raise HTTPException(status_code=500, detail=f"MIDI export failed: {str(e)}")
