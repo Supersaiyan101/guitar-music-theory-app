@@ -26,7 +26,8 @@
 | 🟢 **COMPLETE** | **`TASK-3.4`** | **Dynamic Voice-Leading Spotlight & Shift Vectors** | Guide tone halos (3rd gold, 7th purple), 💎 common tones, ½ & whole step shift arcs, 5-fret hand lock |
 | 🟢 **COMPLETE** | **`TASK-3.5`** | **Backing Comping Engine & Target Practice Drill** | Multi-voice backing band (rhythm, bass, drums), stem mixer, "Target the 3rd" gamified practice drill |
 | 🟢 **COMPLETE** | **`TASK-4.1`** | **Local Qdrant Vector Pipeline & Theory Knowledge Base** | FastEmbed local ONNX CPU/GPU embeddings, Qdrant collection, 10 guitar harmonic unlocks, Tier-2 instant RAM cache (< 1ms), offline indexer |
-| 🟡 **NEXT** | **`TASK-4.2`** | **Guitar Teacher Agent Personas & RAG Query Endpoint** | Pedagogical personas (Blues/Rock, Jazz changes, Hendrix soul), `/api/coach/explain` streaming endpoint, 3-step practice drills |
+| 🟢 **COMPLETE** | **`TASK-4.2`** | **AI Guitar Coach Engine & Streaming Pedagogy Endpoints** | Teacher personas (Blues-Rock, Jazz-Fusion, Neo-Soul), `/api/coach/explain` standard & SSE streaming endpoints, deterministic fallback synthesizer, TypeScript client bridge |
+| 🟡 **NEXT** | **`TASK-4.3`** | **Interactive Guitar Coach UI HUD & Personal Lick Vault** | Collapsible Coach Assistant in Progression Flight-Path, real-time streaming card, 3-step practice drill HUD, personal lick vault |
 
 
 ---
@@ -93,6 +94,16 @@
 4. **Local Qdrant Vector Store & Instant RAM Cache (`TheoryVectorStore`)**: Embedded disk persistence (`data/qdrant_db`) coupled with an in-memory hot cache for Tier-2 instant lookups ($< 0.5\text{ms}$) by Roman numeral, chord symbol, or category, plus sub-10ms semantic vector queries ($5.04\text{ms}$ benchmark).
 5. **Offline Indexing Pipeline (`index_theory_kb.py`)**: One-command ingestion script reading raw pedagogy, generating embeddings, upserting to Qdrant, and generating `data/processed/index_summary.json`.
 
+### `TASK-4.2` Refinements (Commits: `a137913`, `2e4dcda`, `aca72b3`, `924b0ad`, `9a1237c`, `3ddf807`, `9fdca05`, `e885c5f`, `7bc0150`, `76e9878`)
+1. **Coach API & Teacher Persona Schemas (`backend/app/schemas/coach.py`)**: Data contracts for `CoachExplainRequest`, `CoachExplainResponse`, `PersonaProfile`, `FretTargetSuggestion`, and `PracticeDrillStep`.
+2. **Pedagogical Teacher Personas (`backend/app/teachers/personas.py`)**: Authored 3 specialized teacher personalities: "The Blues-Rock Veteran" (B.B. King / SRV vocal bending and major/minor shifts), "The Jazz-Fusion Virtuoso" (Pass / Carlton guide-tone cascades and upper triads), and "The Neo-Soul Balladeer" (Hendrix / Mayer thumb grips and double-stop fills).
+3. **Deterministic Harmonic Context Builder (`backend/app/teachers/context_builder.py`)**: Automatically computes key, Roman numerals, moving voices, and exact physical fret targets (strings 1–6, frets 0–24) prioritizing melodic strings and target zones.
+4. **Deterministic Fallback Synthesizer (`backend/app/teachers/synthesizer.py`)**: Guarantees zero-failure, instant (< 1ms) offline coach responses synthesizing mathematical context, Qdrant theory chunks, and persona flavor without needing an active LLM.
+5. **Local Ollama GPU Client with Fallback (`backend/app/teachers/llm_client.py`)**: Auto-detects local Ollama instance on RTX 4060 GPU with 200ms health check and SSE token streaming, gracefully falling back to deterministic synthesis if offline.
+6. **Coach RAG Orchestrator (`backend/app/teachers/advisor.py`)**: Central brain coordinating context extraction, Qdrant retrieval, and real-time word-by-word streaming.
+7. **FastAPI Server & Endpoints (`backend/app/main.py`, `backend/app/api/endpoints/coach.py`)**: Mounted CORS middleware, `GET /api/coach/personas`, `POST /api/coach/explain`, `POST /api/coach/explain/stream` (SSE), and `GET /api/coach/instant-card`.
+8. **TypeScript Frontend Client Bridge (`frontend/src/lib/api/coachClient.ts`)**: Type-safe client supporting instant card lookups, standard fetch, and SSE stream reader with event dispatching.
+
 ---
 
 ## ✅ Completed Tasks Registry
@@ -117,7 +128,8 @@
 | **`TASK-3.4`** | Dynamic Fretboard Voice-Leading Spotlight & Vector Overlays | 2026-11-05 | Build Clean (0 err) | `frontend/src/components/fretboard/Fretboard.tsx`, `ProgressionTimeline.tsx`, `useTheoryStore.ts` (Guide tone halos for 3rd and 7th with badges; common tone pivot badges 💎; dynamic scalar/voice shift vector arcs with half/whole-step arrows; static hand-lock 5-fret box with outside dimming and zoom focus) |
 | **`TASK-3.5`** | Tone.js Multi-Voice Backing Comping Engine & Practice Drill Game | 2026-11-05 | Build Clean (0 err) | `frontend/src/lib/audio/soundEngine.ts`, `voicingMath.ts`, `ProgressionTimeline.tsx`, `useTheoryStore.ts` (Multi-voice WebAudio backing band with rhythm guitar arpeggiated comping, electric bass root/fifth walking downbeats, and hi-hat/kick metronome groove synchronized to playhead; individual stem mixer; interactive "Target the 3rd" practice drill game with score, streak & instant rewarding feedback) |
 | **`TASK-4.1`** | Local Qdrant Vector Pipeline & Guitar Theory Knowledge Base | 2026-11-06 | 11/11 `pytest` (104 total) | `backend/app/schemas/rag.py`, `backend/app/rag/embedder.py`, `backend/app/rag/vector_store.py`, `data/raw/guitar_theory_kb.json`, `backend/scripts/index_theory_kb.py`, `data/processed/index_summary.json` (FastEmbed 384-dim local ONNX embeddings, Qdrant embedded storage `data/qdrant_db`, 10 structured guitar harmonic unlocks, Tier-2 instant RAM cache for < 1ms chord lookups, 5.04ms semantic search latency, 100% offline & zero API costs) |
-| **Total** | **Phase 1, Phase 2, Phase 3 & Task 4.1 (Core + Studio + Progression Flight-Path + Vector RAG KB)** | | **104/104 Passing (100%) + Clean Next Build** | Complete deterministic theory engine, 24-fret SVG instrument, visual soloing overlays, ear-training WebAudio engine, 16-song progression encyclopedia, interactive timeline HUD, dynamic voice-leading spotlight, multi-voice backing band, target practice game, and local Qdrant vector retrieval engine |
+| **`TASK-4.2`** | AI Guitar Coach Engine & Streaming Pedagogy Endpoints | 2026-11-06 | 6/6 `pytest` (110 total) | `backend/app/schemas/coach.py`, `backend/app/teachers/`, `backend/app/api/endpoints/coach.py`, `backend/app/main.py`, `frontend/src/lib/api/coachClient.ts` (3 pedagogical teacher personas, deterministic context builder with physical fretboard coordinates, instant offline synthesizer, RTX 4060 Ollama streaming client, FastAPI endpoints with SSE word-by-word streaming, TypeScript client bridge) |
+| **Total** | **Phase 1, Phase 2, Phase 3, Task 4.1 & Task 4.2 (Complete Core + RAG + AI Coach Engine)** | | **110/110 Passing (100%) + Clean Next Build** | Complete deterministic theory engine, 24-fret SVG instrument, visual soloing overlays, ear-training WebAudio engine, 16-song progression encyclopedia, interactive timeline HUD, dynamic voice-leading spotlight, multi-voice backing band, target practice game, local Qdrant vector retrieval engine, and AI Guitar Coach streaming endpoints |
 
 
 
