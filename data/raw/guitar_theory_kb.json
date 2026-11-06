@@ -1,0 +1,193 @@
+[
+  {
+    "id": "concept_modal_interchange_minor_iv",
+    "title": "The Minor iv Chord (Modal Interchange in Major Keys)",
+    "harmonic_category": "modal_interchange",
+    "roman_numeral": "iv",
+    "target_chords": ["iv", "ivm7", "iv6", "Cm", "Fm", "Am"],
+    "instant_card": {
+      "vibe": "Bittersweet nostalgic yearning, sudden emotional lift",
+      "hero_move": "Hold the chord root, then slide your finger 1 fret down from the key's Major 3rd to the Minor 3rd on the G or B string.",
+      "twin_songs": [
+        "Creep (Radiohead)",
+        "In My Life (The Beatles)",
+        "Wake Me Up When September Ends (Green Day)",
+        "Blackbird (The Beatles)"
+      ],
+      "target_degree_motion": "3 -> b3 (E -> Eb in key of G)"
+    },
+    "the_musical_why": "In a major key, the IV chord (like C in G major) is completely diatonic and happy. Turning it into a minor chord (Cm) introduces the Eb note from the parallel minor scale. This Eb acts as a powerful voice-leading gravitational pull because it sits just a single half step above D (the 5th of the home key), creating a tear-jerking bittersweet resolution.",
+    "caged_anchors": [
+      "Root-6 E-Shape: B-string Fret 8 (Eb in Cm)",
+      "Root-5 A-Shape: D-string Fret 1 or G-string Fret 5 (Eb in Cm)"
+    ],
+    "soloing_scales": [
+      "Minor Pentatonic over the iv chord",
+      "Melodic Minor built on the iv root",
+      "Dorian Mode over iv"
+    ],
+    "practice_drill": "1) Set up a G - B - C - Cm backing loop. 2) Play your standard G Major Pentatonic over G and C. 3) The exact moment Cm hits, slide your index or middle finger down one half-step to land squarely on the Eb note.",
+    "difficulty": "intermediate",
+    "tags": [
+      "minor_iv",
+      "modal_interchange",
+      "parallel_minor",
+      "creep",
+      "voice_leading",
+      "half_step_drop"
+    ]
+  },
+  {
+    "id": "concept_secondary_dominant_V_of_vi",
+    "title": "Secondary Dominant V/vi (The Major III Pulling to Minor vi)",
+    "harmonic_category": "secondary_dominant",
+    "roman_numeral": "V/vi",
+    "target_chords": ["III", "III7", "V/vi", "B7", "E7", "A7"],
+    "instant_card": {
+      "vibe": "Dramatic Spanish tension, suspenseful build-up before falling into melancholy",
+      "hero_move": "Target the major 3rd of the III chord — it is a foreign sharp note that pulls up a half step into the root of the vi chord.",
+      "twin_songs": [
+        "Hotel California (Eagles)",
+        "Creep (Radiohead - G to B)",
+        "Georgia on My Mind",
+        "Nobody Knows You When You're Down and Out"
+      ],
+      "target_degree_motion": "#5 of key / 3 of III resolving up a half-step to root of vi (D# -> E)"
+    },
+    "the_musical_why": "In G major, the 3rd chord is normally diatonic B minor. Changing it to B major or B7 turns it into a secondary dominant pointing straight at E minor (vi). The secret spice is the D# note inside B7 — D# is not in the G major scale! It functions as a sharp leading tone that aggressively begs to resolve upward by one half-step into E.",
+    "caged_anchors": [
+      "Root-5 A-Shape: D-string Fret 4 (F#) and G-string Fret 4 (B) with B-string Fret 4 (D#)",
+      "Root-6 E-Shape: G-string Fret 8 (D#)"
+    ],
+    "soloing_scales": [
+      "Harmonic Minor of the target vi chord (E Harmonic Minor)",
+      "B Mixolydian b9 b13 (5th mode of Harmonic Minor)",
+      "B7 Arpeggio"
+    ],
+    "practice_drill": "1) Loop G -> B7 -> Em. 2) Over B7, target the D# note on G-string Fret 8. 3) On the downbeat of Em, slide your finger up one single fret to E (G-string Fret 9).",
+    "difficulty": "intermediate",
+    "tags": [
+      "secondary_dominant",
+      "major_III",
+      "leading_tone",
+      "harmonic_minor",
+      "hotel_california",
+      "b7_to_em"
+    ]
+  },
+  {
+    "id": "concept_tritone_substitution",
+    "title": "Tritone Substitution (The Chromatic Slide Dominant)",
+    "harmonic_category": "tritone_sub",
+    "roman_numeral": "subV7",
+    "target_chords": ["subV7", "bII7", "Db7", "Eb7", "Ab7"],
+    "instant_card": {
+      "vibe": "Sleek, smoky jazz sophistication, chromatic sliding gravity",
+      "hero_move": "Play the dominant 7th chord built 1 half-step above your target chord — the bass slides down while guide tones resolve naturally.",
+      "twin_songs": [
+        "Fly Me to the Moon",
+        "The Girl from Ipanema",
+        "Autumn Leaves (Modern arrangements)",
+        "Have You Met Miss Jones"
+      ],
+      "target_degree_motion": "Bass drops chromatic half step (Db -> C) while 3rd and 7th pivot seamlessly"
+    },
+    "the_musical_why": "Every dominant 7th chord is propelled by its unstable tritone interval between the 3rd and 7th. In G7, the guide tones are B and F (6 semitones apart). If you travel 6 semitones away across the circle of fifths to Db7, its guide tones are F and Cb (enharmonic to B)! Because G7 and Db7 share the exact same guide-tone engine, Db7 can replace G7, producing a chromatic descending bassline (Db to C) that sounds ultra-smooth.",
+    "caged_anchors": [
+      "Root-5 A-Shape: Fret 4 on A-string (Db), Fret 3 on D-string (F), Fret 4 on G-string (B/Cb)",
+      "Root-6 E-Shape: Fret 9 on Low E-string (Db)"
+    ],
+    "soloing_scales": [
+      "Lydian Dominant (#11)",
+      "Altered Scale (Super Locrian)",
+      "Db7 Arpeggio"
+    ],
+    "practice_drill": "1) In a standard Dm7 -> G7 -> Cmaj7 progression, swap G7 for Db7. 2) Solo with D Dorian over Dm7. 3) Over Db7, outline the Db7 arpeggio landing on F (fret 6 on B string) before resolving to E on Cmaj7.",
+    "difficulty": "advanced",
+    "tags": [
+      "tritone_sub",
+      "subv7",
+      "jazz",
+      "chromatic_bass",
+      "guide_tones",
+      "lydian_dominant"
+    ]
+  },
+  {
+    "id": "concept_blues_I7_to_IV7_shift",
+    "title": "The Blues I7 to IV7 Shift (Major vs Minor Pentatonic Harmony)",
+    "harmonic_category": "blues_shift",
+    "roman_numeral": "I7 -> IV7",
+    "target_chords": ["I7", "IV7", "A7", "D7", "E7"],
+    "instant_card": {
+      "vibe": "Sweet soulful vocal sweetness on I, gritty raw biting drive on IV",
+      "hero_move": "Play sweet Major Pentatonic / B.B. King box on the I chord, then switch to raw Minor Pentatonic on the IV chord.",
+      "twin_songs": [
+        "The Thrill Is Gone (B.B. King)",
+        "Pride and Joy (SRV)",
+        "Red House (Jimi Hendrix)",
+        "Crossroads (Clapton)"
+      ],
+      "target_degree_motion": "Major 3rd of I chord (C# in A7) shifts to b7 of IV chord (C natural in D7)"
+    },
+    "the_musical_why": "In a blues in A, the I chord is A7 (containing the sweet major 3rd C#). Playing A Major Pentatonic sounds gorgeous over A7. But when the band shifts to the IV chord (D7), the D7 chord contains a C natural (its dominant 7th)! If you keep playing your sweet C# note over D7, it clashes hideously against the D7 harmony. Shifting to A Minor Pentatonic introduces the C natural, perfectly targeting the dominant soul of the IV chord.",
+    "caged_anchors": [
+      "B.B. King Box: Strings 1, 2, 3 around Fret 10 (Root on B string Fret 10)",
+      "Box 1 Minor Pentatonic: Fret 5 across all 6 strings"
+    ],
+    "soloing_scales": [
+      "Major Pentatonic / B.B. King Box over I7",
+      "Minor Blues Scale over IV7 and V7",
+      "Hybrid Major/Minor Blues Scale"
+    ],
+    "practice_drill": "1) Fire up an A Blues 12-bar backing track. 2) On bars 1-4 (A7), solo strictly in the B.B. King box (frets 9-12 on strings 1-3). 3) On bar 5 when D7 hits, drop into Box 1 at fret 5 and bend the b3 (C) slightly microtonally.",
+    "difficulty": "intermediate",
+    "tags": [
+      "blues",
+      "bb_king_box",
+      "major_vs_minor_pentatonic",
+      "srv",
+      "12_bar_blues",
+      "chord_tone_targeting"
+    ]
+  },
+  {
+    "id": "concept_hendrix_mayer_embellishments",
+    "title": "Hendrix & Mayer R&B Chord Embellishments (Hammer-on Fills)",
+    "harmonic_category": "embellishment",
+    "roman_numeral": "I - vi - IV - V",
+    "target_chords": ["maj", "sus4", "add9", "6th", "maj7"],
+    "instant_card": {
+      "vibe": "Silky, fluid neo-soul and vintage R&B cascade without moving hand position",
+      "hero_move": "Fret a root-anchor with your thumb or barre, and use your pinky and ring fingers to hammer-on the 4th, 9th, or 6th degree.",
+      "twin_songs": [
+        "Little Wing (Jimi Hendrix)",
+        "Slow Dancing in a Burning Room (John Mayer)",
+        "Castles Made of Sand",
+        "Bold as Love"
+      ],
+      "target_degree_motion": "Hammer-on release: 3rd -> 4th (sus4), Root -> 2nd/9th (add9), 5th -> 6th"
+    },
+    "the_musical_why": "Jimi Hendrix, Curtis Mayfield, and John Mayer blurred the line between rhythm guitar and soloing. Instead of strumming static barre chords, they keep the chord grip anchored with the fretting hand while hammering decorative scale tones (the 4th, 9th, and 6th). These hammer-on diads create vocal-like ornamentations that make rhythm guitar sound like an orchestral lead.",
+    "caged_anchors": [
+      "CAGED Root-6 E-Shape: Strings 3 & 4 hammer-ons at frets 7 to 9",
+      "CAGED Root-5 A-Shape: Strings 2 & 3 hammer-ons at frets 5 to 7"
+    ],
+    "soloing_scales": [
+      "Major Pentatonic with added 4th",
+      "Hendrix Double-Stop Diads (3rds & 4ths)",
+      "Mixolydian embellishments"
+    ],
+    "practice_drill": "1) Grip an A-major CAGED E-shape at fret 5 (thumb on Low E fret 5). 2) Hammer your ring finger on the G string from fret 6 (Major 3rd) to fret 7 (4th degree). 3) Pull back off to fret 6 to complete the classic Little Wing sigh.",
+    "difficulty": "intermediate",
+    "tags": [
+      "hendrix",
+      "john_mayer",
+      "little_wing",
+      "double_stops",
+      "hammer_ons",
+      "caged_fills",
+      "neo_soul"
+    ]
+  }
+]
