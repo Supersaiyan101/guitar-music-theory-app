@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.endpoints.coach import router as coach_router
+from backend.app.api.endpoints.audio import router as audio_router
 
 app = FastAPI(
     title="Guitar Theory Kingdom API",
@@ -20,6 +21,7 @@ app.add_middleware(
 
 # Mount Routers
 app.include_router(coach_router)
+app.include_router(audio_router)
 
 
 @app.get("/")
