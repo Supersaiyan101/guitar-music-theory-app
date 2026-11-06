@@ -11,6 +11,7 @@ export const AudioTranscriberModal: React.FC = () => {
     isAudioModalOpen,
     setIsAudioModalOpen,
     loadProgression,
+    addCustomSong,
     setHighlightedCoachTarget,
     saveCurrentLick,
     setIsCoachOpen,
@@ -37,6 +38,15 @@ export const AudioTranscriberModal: React.FC = () => {
   const [progResult, setProgResult] = useState<TranscribedProgressionResponse | null>(null);
   const [activeTabNoteIndex, setActiveTabNoteIndex] = useState<number | null>(null);
   const [savedToast, setSavedToast] = useState(false);
+
+  // Phase 6.3 Export & Ingestion States
+  const [exportGrid, setExportGrid] = useState<string>('auto');
+  const [asciiTabContent, setAsciiTabContent] = useState<string | null>(null);
+  const [isAsciiDrawerOpen, setIsAsciiDrawerOpen] = useState(false);
+  const [isExportingTab, setIsExportingTab] = useState(false);
+  const [isExportingMidi, setIsExportingMidi] = useState(false);
+  const [tabCopiedToast, setTabCopiedToast] = useState(false);
+  const [ingestedSongToast, setIngestedSongToast] = useState(false);
 
   if (!isAudioModalOpen) return null;
 
@@ -164,6 +174,110 @@ export const AudioTranscriberModal: React.FC = () => {
     saveCurrentLick(`Transcribed Lick: ${lickResult.primary_caged_box || 'Lead'} Box (${lickResult.hand_position_zone})`);
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2000);
+  };
+
+  // Copy ASCII Tab to Clipboard
+  const handleCopyAsciiTab = async () => {
+    if (!lickResult || lickResult.notes.length === 0) return;
+    setIsExportingTab(true);
+    try {
+      const res = await audioApi.exportAsciiTab({
+        notes: lickResult.notes,
+        bpm: lickResult.detected_bpm || 120.0,
+        grid: exportGrid,
+        title: `Guitar Lick (${lickResult.detected_key} ${lickResult.detected_mode} - Box ${lickResult.primary_caged_box || 'G'})`,
+        key: `${lickResult.detected_key} ${lickResult.detected_mode}`,
+      });
+      if (res) {
+        setAsciiTabContent(res.ascii_tab);
+        await navigator.clipboard.writeText(res.ascii_tab);
+        setTabCopiedToast(true);
+        setTimeout(() => setTabCopiedToast(false), 2000);
+      }
+    } catch (e) {
+      console.error('Failed to copy ASCII tab', e);
+    } finally {
+      setIsExportingTab(false);
+    }
+  };
+
+  // Toggle View Monospace ASCII Tab
+  const handleToggleViewAsciiTab = async () => {
+    if (!isAsciiDrawerOpen && !asciiTabContent && lickResult) {
+      setIsExportingTab(true);
+      try {
+        const res = await audioApi.exportAsciiTab({
+          notes: lickResult.notes,
+          bpm: lickResult.detected_bpm || 120.0,
+          grid: exportGrid,
+          title: `Guitar Lick (${lickResult.detected_key} ${lickResult.detected_mode})`,
+          key: `${lickResult.detected_key} ${lickResult.detected_mode}`,
+        });
+        if (res) {
+          setAsciiTabContent(res.ascii_tab);
+        }
+      } catch (e) {
+        console.error('Failed to generate ASCII tab preview', e);
+      } finally {
+        setIsExportingTab(false);
+      }
+    }
+    setIsAsciiDrawerOpen(!isAsciiDrawerOpen);
+  };
+
+  // Download Standard Binary MIDI File (.mid)
+  const handleDownloadMidi = async () => {
+    if (!lickResult || lickResult.notes.length === 0) return;
+    setIsExportingMidi(true);
+    try {
+      const blob = await audioApi.exportMidi({
+        notes: lickResult.notes,
+        bpm: lickResult.detected_bpm || 120.0,
+        track_name: `Guitar_Lick_${lickResult.detected_key || 'Solo'}`,
+        include_pitch_bends: true,
+      });
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `guitar_lick_${(lickResult.detected_key || 'solo').toLowerCase()}.mid`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error('Failed to download MIDI file', e);
+    } finally {
+      setIsExportingMidi(false);
+    }
+  };
+
+  // Ingest and Persist to Custom Song Library
+  const handleIngestAndSaveToLibrary = () => {
+    if (!progResult) return;
+    const newSong: SongProgression = {
+      id: `custom_ingested_${Date.now()}`,
+      title: `Ingested (${progResult.detected_key} ${progResult.detected_mode})`,
+      artist: 'Audio Transcription',
+      genre: 'classic_rock',
+      difficulty: 'intermediate',
+      default_tempo: Math.round(progResult.detected_bpm || 120),
+      time_signature: progResult.time_signature || '4/4',
+      key: (progResult.detected_key as any) || 'C',
+      mode: (progResult.detected_mode as any) || 'major',
+      chords_sequence: progResult.chords_sequence,
+      chord_durations: progResult.chords_sequence.map(() => 4),
+      bars: progResult.bars,
+      soloing_tip: progResult.harmonic_summary,
+    };
+
+    addCustomSong(newSong);
+    setIngestedSongToast(true);
+    setTimeout(() => {
+      setIngestedSongToast(false);
+      setIsAudioModalOpen(false);
+    }, 1500);
   };
 
   return (
@@ -421,6 +535,78 @@ export const AudioTranscriberModal: React.FC = () => {
                   );
                 })}
               </div>
+
+              {/* Export Toolbar: ASCII Tab & MIDI Exporter */}
+              <div className="pt-2 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-zinc-400 font-mono">Grid:</span>
+                  <select
+                    value={exportGrid}
+                    onChange={(e) => {
+                      setExportGrid(e.target.value);
+                      setAsciiTabContent(null);
+                    }}
+                    className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-[11px] text-zinc-200 focus:outline-none"
+                  >
+                    <option value="auto">Auto Grid</option>
+                    <option value="1/16">1/16 Notes (Lead Solo)</option>
+                    <option value="1/8">1/8 Notes (Straight)</option>
+                    <option value="1/8T">1/8T Triplets (Blues/Shuffle)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleCopyAsciiTab}
+                    disabled={isExportingTab}
+                    className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-750 active:scale-95 text-zinc-200 text-xs font-bold rounded-lg border border-zinc-700 flex items-center gap-1 transition-all"
+                  >
+                    <span>{tabCopiedToast ? '✓' : '📋'}</span>
+                    <span>{tabCopiedToast ? 'Copied Tab!' : 'Copy ASCII Tab'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleToggleViewAsciiTab}
+                    className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-750 text-zinc-200 text-xs font-bold rounded-lg border border-zinc-700 flex items-center gap-1 transition-all"
+                  >
+                    <span>📄</span>
+                    <span>{isAsciiDrawerOpen ? 'Hide Tab Text' : 'View Tab Text'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDownloadMidi}
+                    disabled={isExportingMidi}
+                    className="px-2.5 py-1 bg-sky-950/80 hover:bg-sky-900 active:scale-95 text-sky-300 text-xs font-bold rounded-lg border border-sky-800 flex items-center gap-1 transition-all"
+                  >
+                    <span>🎹</span>
+                    <span>{isExportingMidi ? 'Exporting...' : 'Download MIDI'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* ASCII Tab Preformatted Viewer */}
+              {isAsciiDrawerOpen && asciiTabContent && (
+                <div className="mt-2 p-3 bg-zinc-950 border border-zinc-800 rounded-lg">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/80">
+                    <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase">
+                      Standard 6-Line Monospace ASCII Tab
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyAsciiTab}
+                      className="text-[11px] text-sky-400 hover:text-sky-300 font-mono"
+                    >
+                      {tabCopiedToast ? '✓ Copied to clipboard' : 'Copy Text'}
+                    </button>
+                  </div>
+                  <pre className="font-mono text-[11px] leading-tight text-emerald-400/90 overflow-x-auto whitespace-pre p-2 bg-black/60 rounded border border-zinc-900">
+                    {asciiTabContent}
+                  </pre>
+                </div>
+              )}
             </div>
           )}
 
@@ -435,13 +621,24 @@ export const AudioTranscriberModal: React.FC = () => {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleLoadProgression}
-                  className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold rounded-lg shadow transition-all flex items-center gap-1.5"
-                >
-                  <span>🚀</span> Ingest into Flight-Path
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleIngestAndSaveToLibrary}
+                    className="px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold rounded-lg border border-amber-500/30 shadow transition-all flex items-center gap-1.5"
+                  >
+                    <span>{ingestedSongToast ? '★' : '💾'}</span>
+                    <span>{ingestedSongToast ? 'Saved to Library!' : 'Save to Song Library'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLoadProgression}
+                    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold rounded-lg shadow transition-all flex items-center gap-1.5"
+                  >
+                    <span>🚀</span> Ingest into Flight-Path
+                  </button>
+                </div>
               </div>
 
               {/* Chord Progression Badges */}

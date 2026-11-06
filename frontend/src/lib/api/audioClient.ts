@@ -1,6 +1,6 @@
 /**
- * Audio Transcription & Ingestion API Client.
- * Connects frontend to the FastAPI basic-pitch audio transcription endpoints.
+ * Audio Transcription, Ingestion & Export API Client.
+ * Connects frontend to the FastAPI basic-pitch audio transcription & tab export endpoints.
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -64,6 +64,30 @@ export interface TranscribedProgressionResponse {
   raw_chords: TranscribedChordEvent[];
   total_duration: number;
   inference_device: string;
+}
+
+export interface AsciiTabExportRequest {
+  notes: TranscribedNoteEvent[];
+  bpm?: number;
+  grid?: string;
+  title?: string;
+  key?: string;
+  measures_per_line?: number;
+}
+
+export interface AsciiTabExportResponse {
+  ascii_tab: string;
+  total_measures: number;
+  quantization_grid: string;
+  bpm: number;
+}
+
+export interface MidiExportRequest {
+  notes: TranscribedNoteEvent[];
+  bpm?: number;
+  time_signature?: string;
+  track_name?: string;
+  include_pitch_bends?: boolean;
 }
 
 export const audioApi = {
@@ -130,6 +154,61 @@ export const audioApi = {
       return (await res.json()) as TranscribedProgressionResponse;
     } catch (err) {
       console.error('Progression transcribe error:', err);
+      return null;
+    }
+  },
+
+  /**
+   * Generates standard 6-line ASCII guitar tablature with articulations and measure bars.
+   */
+  async exportAsciiTab(req: AsciiTabExportRequest): Promise<AsciiTabExportResponse | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/audio/export-tab-ascii`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: req.notes,
+          bpm: req.bpm || 120.0,
+          grid: req.grid || 'auto',
+          title: req.title || 'Guitar Solo Transcription',
+          key: req.key,
+          measures_per_line: req.measures_per_line || 2,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`ASCII tab export failed with status ${res.status}`);
+      }
+      return (await res.json()) as AsciiTabExportResponse;
+    } catch (err) {
+      console.error('ASCII export error:', err);
+      return null;
+    }
+  },
+
+  /**
+   * Generates a standard binary Type 0 MIDI file (.mid) from transcribed notes.
+   */
+  async exportMidi(req: MidiExportRequest): Promise<Blob | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/audio/export-midi`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: req.notes,
+          bpm: req.bpm || 120.0,
+          time_signature: req.time_signature || '4/4',
+          track_name: req.track_name || 'Guitar Solo',
+          include_pitch_bends: req.include_pitch_bends ?? true,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`MIDI export failed with status ${res.status}`);
+      }
+      return await res.blob();
+    } catch (err) {
+      console.error('MIDI export error:', err);
       return null;
     }
   },
