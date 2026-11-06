@@ -70,6 +70,12 @@ export interface TheoryState {
   isCustomModalOpen: boolean;
   isAudioModalOpen: boolean;
 
+  // Custom & Ingested Songs
+  customSongs: SongProgression[];
+  addCustomSong: (song: SongProgression) => void;
+  removeCustomSong: (songId: string) => void;
+  initStoredData: () => void;
+
   // Phase 3 Fretboard Voice-Leading Overlays
   showGuideToneHalos: boolean;
   showCommonToneBadges: boolean;
@@ -206,10 +212,31 @@ export interface TheoryState {
   setIsLickVaultOpen: (open: boolean) => void;
 }
 
+const getInitialCustomSongs = (): SongProgression[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem('guitar_theory_custom_songs');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+const getInitialSavedLicks = (): SavedLick[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem('guitar_theory_saved_licks');
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
 const DEFAULT_STATE = {
   // Phase 3 Progression Mode Defaults
   studioMode: 'explorer' as 'explorer' | 'progression',
   activeProgression: CURATED_SONGS[0],
+  customSongs: getInitialCustomSongs(),
   progressionAnalysis: analyzeProgressionClient(
     CURATED_SONGS[0].chords_sequence,
     CURATED_SONGS[0].key,
@@ -283,7 +310,7 @@ const DEFAULT_STATE = {
   highlightedCoachTarget: null as { string: number; fret: number; note: string } | null,
   liveMicNote: null as { pitchClass: string; octave: number; noteName: string; cents: number; isInTune: boolean } | null,
   activeDrillStepIndex: 0,
-  savedLicks: [] as SavedLick[],
+  savedLicks: getInitialSavedLicks(),
   isLickVaultOpen: false,
 };
 
@@ -311,6 +338,41 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
     if (progression.chords_sequence.length > 0) {
       get().setChordIndex(0);
     }
+  },
+
+  addCustomSong: (song: SongProgression) => {
+    const s = get();
+    const filtered = s.customSongs.filter((item) => item.id !== song.id);
+    const updated = [song, ...filtered];
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('guitar_theory_custom_songs', JSON.stringify(updated));
+      } catch {}
+    }
+    set({ customSongs: updated });
+    get().loadProgression(song);
+  },
+
+  removeCustomSong: (songId: string) => {
+    const updated = get().customSongs.filter((item) => item.id !== songId);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('guitar_theory_custom_songs', JSON.stringify(updated));
+      } catch {}
+    }
+    set({ customSongs: updated });
+  },
+
+  initStoredData: () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const storedSongs = localStorage.getItem('guitar_theory_custom_songs');
+      const storedLicks = localStorage.getItem('guitar_theory_saved_licks');
+      set({
+        customSongs: storedSongs ? JSON.parse(storedSongs) : get().customSongs,
+        savedLicks: storedLicks ? JSON.parse(storedLicks) : get().savedLicks,
+      });
+    } catch {}
   },
 
   setBarIndex: (barIndex: number) => {

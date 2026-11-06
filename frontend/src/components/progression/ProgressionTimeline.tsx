@@ -49,6 +49,7 @@ export const ProgressionTimeline: React.FC = () => {
     isCoachOpen,
     setIsCoachOpen,
     setIsAudioModalOpen,
+    customSongs,
   } = useTheoryStore();
 
   const timelineContainerRef = useRef<HTMLDivElement>(null);
@@ -170,6 +171,11 @@ export const ProgressionTimeline: React.FC = () => {
   };
 
   const handleSongSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const custom = customSongs.find((s) => s.id === e.target.value);
+    if (custom) {
+      loadProgression(custom);
+      return;
+    }
     const song = getCuratedSong(e.target.value);
     if (song) {
       loadProgression(song);
@@ -189,6 +195,15 @@ export const ProgressionTimeline: React.FC = () => {
             onChange={handleSongSelect}
             className="bg-zinc-900 border border-zinc-700/80 rounded-xl px-3 py-1.5 text-xs text-white font-medium focus:outline-none focus:border-cyan-500 shadow-inner"
           >
+            {customSongs.length > 0 && (
+              <optgroup label="✨ Ingested & Custom Songs">
+                {customSongs.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.artist ? `${s.artist} — ` : ''}{s.title}
+                  </option>
+                ))}
+              </optgroup>
+            )}
             <optgroup label="🎸 Classic Rock & Guitar Anthems">
               {CURATED_SONGS.filter((s) => s.genre === 'classic_rock').map((s) => (
                 <option key={s.id} value={s.id}>

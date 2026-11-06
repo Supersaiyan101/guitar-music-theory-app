@@ -33,7 +33,12 @@ export default function Home() {
     cagedShape,
     stringOrientation,
     activeProgression,
+    initStoredData,
   } = useTheoryStore();
+
+  React.useEffect(() => {
+    initStoredData();
+  }, [initStoredData]);
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-zinc-100 flex flex-col font-sans selection:bg-red-500/30 selection:text-red-200">
