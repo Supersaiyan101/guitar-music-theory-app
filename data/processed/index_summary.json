@@ -1,0 +1,21 @@
+{
+  "collection_name": "guitar_theory_v1",
+  "storage_path": "data/qdrant_db",
+  "indexed_chunks": 10,
+  "indexing_time_ms": 1290.54,
+  "benchmark_query": "Why does Creep use a minor chord at the end?",
+  "benchmark_top_result": "The Minor iv Chord (Modal Interchange in Major Keys)",
+  "benchmark_score": 0.756,
+  "benchmark_latency_ms": 5.04,
+  "categories_indexed": [
+    "upper_extensions",
+    "voice_leading",
+    "embellishment",
+    "modal_interchange",
+    "tritone_sub",
+    "modal_shift",
+    "secondary_dominant",
+    "passing_chord",
+    "blues_shift"
+  ]
+}
