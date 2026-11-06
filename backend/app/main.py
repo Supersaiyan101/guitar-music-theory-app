@@ -1,6 +1,7 @@
 """Main FastAPI application entry point for Guitar Theory Kingdom."""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from backend.app.api.endpoints.coach import router as coach_router
 
 app = FastAPI(
     title="Guitar Theory Kingdom API",
@@ -16,6 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount Routers
+app.include_router(coach_router)
 
 
 @app.get("/")
