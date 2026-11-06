@@ -189,5 +189,196 @@
       "caged_fills",
       "neo_soul"
     ]
+  },
+  {
+    "id": "concept_backdoor_resolution_bVII7",
+    "title": "The Backdoor Progression bVII7 to I (Soul & Neo-Soul Cadence)",
+    "harmonic_category": "modal_interchange",
+    "roman_numeral": "bVII7 -> I",
+    "target_chords": ["bVII", "bVII7", "Bb7", "F7", "Ab7"],
+    "instant_card": {
+      "vibe": "Silky, unexpected soul warmth, soaring resolution into light",
+      "hero_move": "Target the b7 of the bVII7 chord — it sits just a half step above the 5th of your target chord.",
+      "twin_songs": [
+        "Just the Two of Us",
+        "If I Ain't Got You (Alicia Keys)",
+        "Lady Bird (Tadd Dameron)",
+        "Sir Duke (Stevie Wonder)"
+      ],
+      "target_degree_motion": "b7 of bVII7 (Ab in Bb7) slides down a half step to 5th of I (G in Cmaj7)"
+    },
+    "the_musical_why": "In a traditional V7 -> I cadence (G7 to C), the leading tone B pulls up to C. In the backdoor cadence, we substitute the minor iv (Fm7) and its dominant partner bVII7 (Bb7). The Bb7 chord contains Ab (its dominant 7th) and D (its 3rd). Instead of pulling upward, the Ab smoothly glides down a half step into G (the 5th of Cmaj7). It feels like entering the home room through the backdoor garden instead of the front porch.",
+    "caged_anchors": [
+      "CAGED Root-6 E-Shape: Fret 6 on Low E-string (Bb7) with Fret 9 on B-string (Ab)",
+      "CAGED Root-5 A-Shape: Fret 1 on A-string (Bb7)"
+    ],
+    "soloing_scales": [
+      "Bb Lydian Dominant (F Melodic Minor)",
+      "F Minor Pentatonic over Bb7",
+      "C Major Pentatonic on resolution"
+    ],
+    "practice_drill": "1) Loop Fm7 -> Bb7 -> Cmaj7. 2) Over Bb7, fret Ab on B-string Fret 9. 3) On Cmaj7, slide down 1 fret to G on Fret 8 and let it sing.",
+    "difficulty": "advanced",
+    "tags": [
+      "backdoor_resolution",
+      "bvii7",
+      "neo_soul",
+      "stevie_wonder",
+      "modal_interchange",
+      "lydian_dominant"
+    ]
+  },
+  {
+    "id": "concept_ii_V_I_guide_tone_cascade",
+    "title": "The ii-V-I Guide Tone Cascade (The Jazz Engine)",
+    "harmonic_category": "voice_leading",
+    "roman_numeral": "ii7 - V7 - Imaj7",
+    "target_chords": ["ii7", "V7", "Imaj7", "Dm7", "G7", "Cmaj7"],
+    "instant_card": {
+      "vibe": "Classic, effortless storytelling with endless forward momentum",
+      "hero_move": "The 7th of chord 1 falls down 1 fret to become the 3rd of chord 2; then the 7th of chord 2 falls down 1 fret to become the 3rd of chord 3.",
+      "twin_songs": [
+        "Autumn Leaves",
+        "Fly Me to the Moon",
+        "All The Things You Are",
+        "Satin Doll"
+      ],
+      "target_degree_motion": "Cascading 7th -> 3rd half-step drops: C -> B (on G7), then F -> E (on Cmaj7)"
+    },
+    "the_musical_why": "The ii-V-I is the foundation of jazz and American popular song. The entire harmonic engine runs on two notes: the 3rd and the 7th (the guide tones). When moving from Dm7 to G7, the 7th of Dm7 (C) falls by a single half-step to the 3rd of G7 (B). When moving from G7 to Cmaj7, the 7th of G7 (F) falls by a single half-step to the 3rd of Cmaj7 (E). By targeting these half-step handshakes, you sound like you are outlining the chords without strumming them.",
+    "caged_anchors": [
+      "Root-5 / Root-6 Guide Tone Shells: Strings 3 & 4 at frets 9 to 10",
+      "Strings 1 & 2 at frets 5 to 7"
+    ],
+    "soloing_scales": [
+      "D Dorian -> G Mixolydian -> C Major",
+      "Arpeggios targeting 3rds on downbeats",
+      "Major Bebop Scale"
+    ],
+    "practice_drill": "1) Set up Dm7 - G7 - Cmaj7. 2) Play ONLY two notes per chord on strings 3 and 4 (the guide tones). 3) Watch your fingers descend by 1 fret on each change like clockwork.",
+    "difficulty": "intermediate",
+    "tags": [
+      "ii_v_i",
+      "jazz",
+      "guide_tones",
+      "voice_leading",
+      "autumn_leaves",
+      "chords_outline"
+    ]
+  },
+  {
+    "id": "concept_superimposed_triads_upper_extensions",
+    "title": "Superimposed Triads (Instant 9ths, 11ths, and 13ths)",
+    "harmonic_category": "upper_extensions",
+    "roman_numeral": "Upper Triads over Imaj7, ii7, and V7",
+    "target_chords": ["maj7", "maj9", "min9", "13", "7alt"],
+    "instant_card": {
+      "vibe": "Sophisticated, airy modern guitar sound without memorizing complex scales",
+      "hero_move": "Play a simple 3-note minor triad off the 3rd of any major 7th chord (e.g. play Em over Cmaj7) to instantly unlock the major 9th.",
+      "twin_songs": [
+        "Cliffs of Dover (Eric Johnson)",
+        "Kid Charlemagne (Steely Dan / Larry Carlton)",
+        "Continuum (John Mayer)",
+        "Spain (Chick Corea)"
+      ],
+      "target_degree_motion": "Triad root over chord 3rd (Em: E-G-B gives 3-5-7; Bm: B-D-F# gives 7-9-#11)"
+    },
+    "the_musical_why": "Pro guitarists rarely play basic root-position chords during a solo. Instead, they superimpose simple triads over the bass note. Over a Cmaj7 chord, playing an Em triad (E-G-B) outlines the 3rd, 5th, and 7th. Playing a Bm triad (B-D-F#) outlines the 7th, 9th, and #11 (Lydian sound). Because your fingers already know basic triad shapes anywhere on the neck, this instantly unlocks modern fusion sounds without learning 10 new modes.",
+    "caged_anchors": [
+      "Top 3 Strings (1-2-3): Em triad at frets 7-8-7 or 12-12-12",
+      "Middle Strings (2-3-4): Bm triad at frets 7-7-7"
+    ],
+    "soloing_scales": [
+      "Minor Triad off the 3rd",
+      "Major Triad off the 5th",
+      "Spread Triads (Eric Johnson open voicings)"
+    ],
+    "practice_drill": "1) Loop a static Cmaj7 or C bass drone. 2) Solo using ONLY the E minor triad (E, G, B) across strings 1, 2, and 3. 3) Notice how it sounds like an airy, sophisticated Cmaj7 extension without touching the root note C.",
+    "difficulty": "advanced",
+    "tags": [
+      "superimposed_triads",
+      "eric_johnson",
+      "larry_carlton",
+      "extensions",
+      "lydian",
+      "triads"
+    ]
+  },
+  {
+    "id": "concept_diminished_7th_passing_pivot",
+    "title": "Diminished 7th Passing Chords (The Symmetrical Glue)",
+    "harmonic_category": "passing_chord",
+    "roman_numeral": "#Io7, #iio7, bIIIo7",
+    "target_chords": ["dim7", "o7", "C#dim7", "D#dim7", "Ebdim7"],
+    "instant_card": {
+      "vibe": "Old-school swing tension, chromatic connecting glue, dramatic lift",
+      "hero_move": "Slide the exact same 4-finger diminished grip up or down 3 frets — every note in the chord inverts symmetrically.",
+      "twin_songs": [
+        "Ain't Misbehavin' (Django Reinhardt)",
+        "Georgia on My Mind",
+        "Stormy Monday",
+        "San Francisco Bay Blues"
+      ],
+      "target_degree_motion": "Bass climbs chromatically (#I -> ii) while diminished tones resolve inward"
+    },
+    "the_musical_why": "A diminished 7th chord is built entirely of minor 3rd intervals (3 frets apart). Because it is perfectly symmetrical, moving any diminished 7th chord grip up or down by 3 frets yields the exact same notes in a different inversion! Furthermore, any diminished 7th chord is secretly a rootless dominant 7(b9) chord. In C major, playing C#dim7 between C and Dm gives a chromatic ascending bassline (C -> C# -> D) while acting as an A7(b9) secondary dominant resolving to Dm.",
+    "caged_anchors": [
+      "4-String Grip (Strings 1-4 or 2-5): Fret 4 on B, Fret 3 on G, Fret 5 on D, Fret 4 on A (C#dim7)",
+      "Move whole shape +3 frets to Fret 7, 10, 13"
+    ],
+    "soloing_scales": [
+      "Diminished Whole-Half Scale",
+      "Diminished 7th Arpeggio (repeating every 3 frets)",
+      "Harmonic Minor of resolution target"
+    ],
+    "practice_drill": "1) Loop C -> C#dim7 -> Dm7 -> G7. 2) Over C#dim7, play a 4-note diminished arpeggio. 3) Slide the entire shape up 3 frets and play the exact same lick.",
+    "difficulty": "intermediate",
+    "tags": [
+      "diminished_7th",
+      "passing_chord",
+      "django_reinhardt",
+      "symmetrical",
+      "swing",
+      "arpeggios"
+    ]
+  },
+  {
+    "id": "concept_dorian_vs_aeolian_modal_shift",
+    "title": "The Dorian vs Aeolian Modal Shift (The Major 6th Hero Note)",
+    "harmonic_category": "modal_shift",
+    "roman_numeral": "i - IV (Dorian) vs i - iv (Aeolian)",
+    "target_chords": ["m7", "m6", "min", "Am7", "D7", "Dm7"],
+    "instant_card": {
+      "vibe": "Dorian = optimistic, uplifted Santana/Pink Floyd groove. Aeolian = tragic, dark classic sadness.",
+      "hero_move": "To sound Dorian, target the Major 6th note (B in D Dorian, F# in A Dorian). To sound Aeolian, drop it 1 fret down to Minor 6th.",
+      "twin_songs": [
+        "Oye Como Va (Santana)",
+        "Breathe (Pink Floyd)",
+        "Evil Ways (Santana)",
+        "Stairway to Heaven Solo (Aeolian contrast)"
+      ],
+      "target_degree_motion": "Major 6th (sweet Dorian) vs Minor 6th (tragic Aeolian) 1-fret switch"
+    },
+    "the_musical_why": "Both Dorian and Aeolian are minor modes with a minor 3rd and minor 7th. The single note that separates them is the 6th degree. Aeolian has a minor 6th (F in A minor), which feels tragic and heavy. Dorian raises that note to a Major 6th (F# in A minor), which instantly removes the gloom and injects breezy, optimistic funk/rock flavor. When a progression has a major IV chord (like Am to D7), it is strictly Dorian, and targeting that raised 6th note is the secret to sounding like Carlos Santana.",
+    "caged_anchors": [
+      "Root-6 Box 1: B-string Fret 7 (F# in A Dorian)",
+      "Root-5 Box: G-string Fret 11 (F# in A Dorian)"
+    ],
+    "soloing_scales": [
+      "Dorian Mode (Formula: 1, 2, b3, 4, 5, 6, b7)",
+      "Minor Pentatonic + Major 6th",
+      "Dorian Bebop Scale"
+    ],
+    "practice_drill": "1) Loop an Am7 to D7 groove. 2) Solo in A Minor Pentatonic at fret 5. 3) On the D7 chord, deliberately land on the F# note on B-string Fret 7 (the Major 6th) and add wide vibrato.",
+    "difficulty": "intermediate",
+    "tags": [
+      "dorian",
+      "aeolian",
+      "santana",
+      "pink_floyd",
+      "modal_soloing",
+      "major_6th",
+      "target_tones"
+    ]
   }
 ]
