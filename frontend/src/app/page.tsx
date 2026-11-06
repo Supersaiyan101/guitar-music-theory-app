@@ -17,6 +17,7 @@ import { HarmonicContextHUD } from '@/components/progression/HarmonicContextHUD'
 import { GuitarCoachHUD } from '@/components/coach/GuitarCoachHUD';
 import { LickVault } from '@/components/coach/LickVault';
 import { AudioTranscriberModal } from '@/components/audio/AudioTranscriberModal';
+import { GuitarTunerHUD } from '@/components/audio/GuitarTunerHUD';
 import { useTheoryStore } from '@/store/useTheoryStore';
 
 export default function Home() {
@@ -127,6 +128,11 @@ export default function Home() {
             </section>
           </>
         )}
+
+        {/* Phase 6.2: Low-Latency Chromatic Guitar Tuner & Live Pitch Tracker HUD */}
+        <section>
+          <GuitarTunerHUD />
+        </section>
 
         {/* 24-Fret Parallel SVG Fretboard Component */}
         <section className="relative flex flex-col bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl p-6">

@@ -95,6 +95,7 @@ export interface TheoryState {
   setTargetDrillActive: (active: boolean) => void;
   resetTargetDrill: () => void;
   evaluateDrillClick: (coord: FretCoordinate) => void;
+  evaluateLiveMicNote: (pitchClass: string) => void;
 
   // Visual & Fretboard Display Modes
   displayMode: DisplayMode;
@@ -523,6 +524,58 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
             currentChord.guide_tones[0] || 'guide tone'
           })!`,
           type: 'outside',
+        },
+      });
+    }
+  },
+
+  evaluateLiveMicNote: (pitchClass: string) => {
+    const {
+      targetDrillActive,
+      progressionAnalysis,
+      currentChordIndex,
+      targetDrillScore,
+      targetDrillStreak,
+    } = get();
+    if (!targetDrillActive || !progressionAnalysis) return;
+
+    const currentChord = progressionAnalysis.chords[currentChordIndex];
+    if (!currentChord) return;
+
+    const playedPc = noteToPitchClass(pitchClass);
+    const rootPc = noteToPitchClass(currentChord.root);
+    const diff = (playedPc - rootPc + 12) % 12;
+
+    const isThird = diff === 3 || diff === 4;
+    const isSeventh = diff === 10 || diff === 11;
+    const isRoot = diff === 0;
+
+    if (isThird) {
+      soundEngine.playRewardChime(true);
+      set({
+        targetDrillScore: targetDrillScore + 100,
+        targetDrillStreak: targetDrillStreak + 1,
+        targetDrillFeedback: {
+          message: `🎯 LIVE MIC HIT! Landed on the ${diff === 4 ? 'Major' : 'Minor'} 3rd (${pitchClass})! +100`,
+          type: 'perfect',
+        },
+      });
+    } else if (isSeventh) {
+      soundEngine.playRewardChime(false);
+      set({
+        targetDrillScore: targetDrillScore + 75,
+        targetDrillStreak: targetDrillStreak + 1,
+        targetDrillFeedback: {
+          message: `✨ LIVE MIC HIT! 7th Guide Tone (${pitchClass})! +75`,
+          type: 'great',
+        },
+      });
+    } else if (isRoot) {
+      set({
+        targetDrillScore: targetDrillScore + 50,
+        targetDrillFeedback: {
+          message: `⚓ Root Anchor (${pitchClass}) hit on live guitar! (+50 pts)`,
+          type: 'anchor',
         },
       });
     }

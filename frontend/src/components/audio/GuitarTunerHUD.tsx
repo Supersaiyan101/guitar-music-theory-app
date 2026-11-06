@@ -57,7 +57,7 @@ const TUNING_PRESETS: TuningPreset[] = [
 ];
 
 export const GuitarTunerHUD: React.FC = () => {
-  const { setLiveMicNote } = useTheoryStore();
+  const { setLiveMicNote, evaluateLiveMicNote } = useTheoryStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [currentPitch, setCurrentPitch] = useState<PitchDetectionResult | null>(null);
@@ -65,6 +65,7 @@ export const GuitarTunerHUD: React.FC = () => {
   const [micError, setMicError] = useState<string | null>(null);
 
   const trackerRef = useRef<LivePitchTracker | null>(null);
+  const lastGradedTimeRef = useRef<number>(0);
 
   const activePreset = TUNING_PRESETS[selectedPresetIdx];
 
@@ -82,6 +83,14 @@ export const GuitarTunerHUD: React.FC = () => {
       const ok = await trackerRef.current.start((result) => {
         setCurrentPitch(result);
         setLiveMicNote(result);
+
+        if (result) {
+          const now = Date.now();
+          if (now - lastGradedTimeRef.current > 700) {
+            evaluateLiveMicNote(result.pitchClass);
+            lastGradedTimeRef.current = now;
+          }
+        }
       });
       if (ok) {
         setIsListening(true);
