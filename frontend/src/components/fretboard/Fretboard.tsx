@@ -57,6 +57,7 @@ export const Fretboard: React.FC = () => {
     targetDrillActive,
     evaluateDrillClick,
     highlightedCoachTarget,
+    liveMicNote,
   } = useTheoryStore();
 
   const [hoveredCell, setHoveredCell] = useState<{ stringNumber: number; fretNumber: number } | null>(null);
@@ -1480,6 +1481,52 @@ export const Fretboard: React.FC = () => {
                           </text>
                         </g>
                       )}
+
+                    {/* Live Microphone Pitch Tracker Spotlight */}
+                    {liveMicNote && coord.pitchWithOctave === liveMicNote.noteName && (
+                      <g className="live-mic-spotlight pointer-events-none">
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r={23}
+                          fill={liveMicNote.isInTune ? "rgba(16, 185, 129, 0.35)" : "rgba(244, 63, 94, 0.35)"}
+                          stroke={liveMicNote.isInTune ? "#10b981" : "#f43f5e"}
+                          strokeWidth={2.5}
+                          className="animate-ping opacity-80"
+                        />
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r={19}
+                          fill="none"
+                          stroke={liveMicNote.isInTune ? "#34d399" : "#fb7185"}
+                          strokeWidth={2}
+                          strokeDasharray="4, 2"
+                          className="animate-spin-slow"
+                        />
+                        <rect
+                          x={x - 18}
+                          y={y - 26}
+                          width={36}
+                          height={12}
+                          rx={3}
+                          fill={liveMicNote.isInTune ? "#064e3b" : "#881337"}
+                          stroke={liveMicNote.isInTune ? "#34d399" : "#fda4af"}
+                          strokeWidth={1}
+                          className="shadow-lg"
+                        />
+                        <text
+                          x={x}
+                          y={y - 17.5}
+                          textAnchor="middle"
+                          className={`text-[6.5px] font-black fill-white pointer-events-none uppercase tracking-wider ${
+                            handedness === 'left' ? 'scale-x-[-1]' : ''
+                          }`}
+                        >
+                          {liveMicNote.isInTune ? 'MIC: OK' : `MIC: ${liveMicNote.cents}c`}
+                        </text>
+                      </g>
+                    )}
 
                     {/* Common Tone Pivot Badge */}
                     {isCommonTone && (

@@ -183,6 +183,7 @@ export interface TheoryState {
   isCoachStreaming: boolean;
   streamingText: string;
   highlightedCoachTarget: { string: number; fret: number; note: string } | null;
+  liveMicNote: { pitchClass: string; octave: number; noteName: string; cents: number; isInTune: boolean } | null;
   activeDrillStepIndex: number;
   savedLicks: SavedLick[];
   isLickVaultOpen: boolean;
@@ -196,6 +197,7 @@ export interface TheoryState {
   setStreamingText: (text: string) => void;
   appendStreamingToken: (token: string) => void;
   setHighlightedCoachTarget: (target: { string: number; fret: number; note: string } | null) => void;
+  setLiveMicNote: (note: { pitchClass: string; octave: number; noteName: string; cents: number; isInTune: boolean } | null) => void;
   setActiveDrillStepIndex: (index: number) => void;
   saveCurrentLick: (userNotes?: string) => void;
   removeSavedLick: (lickId: string) => void;
@@ -278,6 +280,7 @@ const DEFAULT_STATE = {
   isCoachStreaming: false,
   streamingText: '',
   highlightedCoachTarget: null as { string: number; fret: number; note: string } | null,
+  liveMicNote: null as { pitchClass: string; octave: number; noteName: string; cents: number; isInTune: boolean } | null,
   activeDrillStepIndex: 0,
   savedLicks: [] as SavedLick[],
   isLickVaultOpen: false,
@@ -637,6 +640,7 @@ export const useTheoryStore = create<TheoryState>((set, get) => ({
   setStreamingText: (streamingText: string) => set({ streamingText }),
   appendStreamingToken: (token: string) => set((s) => ({ streamingText: s.streamingText + token })),
   setHighlightedCoachTarget: (highlightedCoachTarget) => set({ highlightedCoachTarget }),
+  setLiveMicNote: (liveMicNote) => set({ liveMicNote }),
   setActiveDrillStepIndex: (activeDrillStepIndex: number) => set({ activeDrillStepIndex }),
   setIsLickVaultOpen: (isLickVaultOpen: boolean) => set({ isLickVaultOpen }),
 

@@ -57,6 +57,7 @@ const TUNING_PRESETS: TuningPreset[] = [
 ];
 
 export const GuitarTunerHUD: React.FC = () => {
+  const { setLiveMicNote } = useTheoryStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [currentPitch, setCurrentPitch] = useState<PitchDetectionResult | null>(null);
@@ -72,6 +73,7 @@ export const GuitarTunerHUD: React.FC = () => {
       trackerRef.current?.stop();
       setIsListening(false);
       setCurrentPitch(null);
+      setLiveMicNote(null);
     } else {
       setMicError(null);
       if (!trackerRef.current) {
@@ -79,6 +81,7 @@ export const GuitarTunerHUD: React.FC = () => {
       }
       const ok = await trackerRef.current.start((result) => {
         setCurrentPitch(result);
+        setLiveMicNote(result);
       });
       if (ok) {
         setIsListening(true);
@@ -91,8 +94,9 @@ export const GuitarTunerHUD: React.FC = () => {
   useEffect(() => {
     return () => {
       trackerRef.current?.stop();
+      setLiveMicNote(null);
     };
-  }, []);
+  }, [setLiveMicNote]);
 
   // Determine closest string in active tuning
   const closestString = currentPitch
